@@ -13,23 +13,32 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 
 ### One-liner (remote — no clone needed)
 
+**Bash (macOS / Linux / WSL):**
+
 ```bash
-# Install a specific pack into current project
 curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack course
-
-# Install all packs
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack all
-
-# Install into a specific directory, overwriting existing
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack testdocs --target ~/my-project --force
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack all --target ~/my-project
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack testdocs --force
 ```
 
-For private repos:
+**PowerShell (Windows):**
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack course
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack all -Target .
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack testdocs -Force
+```
+
+**Private repos** — pass a token:
 
 ```bash
 curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
   https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh \
   | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
+```
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack course -GitHubToken $env:GITHUB_TOKEN
 ```
 
 ### Local (if you've cloned the repo)
@@ -75,6 +84,7 @@ SKILL_builder/
 │           └── skills/       (2 skills)
 ├── install.ps1
 ├── install.sh
+├── remote-install.ps1
 ├── remote-install.sh
 └── README.md
 ```
