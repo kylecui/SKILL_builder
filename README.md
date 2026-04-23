@@ -11,48 +11,45 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 
 ## Install
 
-### PowerShell (Windows)
+### One-liner (remote — no clone needed)
+
+```bash
+# Install a specific pack into current project
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack course
+
+# Install all packs
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack all
+
+# Install into a specific directory, overwriting existing
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack testdocs --target ~/my-project --force
+```
+
+For private repos:
+
+```bash
+curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
+  https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh \
+  | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
+```
+
+### Local (if you've cloned the repo)
+
+#### PowerShell (Windows)
 
 ```powershell
-# Install a specific pack
 .\install.ps1 -Pack course -Target C:\path\to\project
-
-# Install all packs into current directory
 .\install.ps1 -Pack all
-
-# Overwrite existing skills
 .\install.ps1 -Pack course -Target . -Force
-
-# List available packs
 .\install.ps1 -List
 ```
 
-### Bash (macOS / Linux / WSL)
+#### Bash (macOS / Linux / WSL)
 
 ```bash
-# Install a specific pack
 ./install.sh --pack course --target ~/my-project
-
-# Install all packs into current directory
 ./install.sh --pack all
-
-# Overwrite existing skills
 ./install.sh --pack testdocs --target . --force
-
-# List available packs
 ./install.sh --list
-```
-
-### One-liner (local)
-
-```powershell
-# PowerShell — install all packs into current project
-& D:\MyWorkSpaces\SKILL_builder\install.ps1 -Pack all -Target .
-```
-
-```bash
-# Bash — install all packs into current project
-bash /path/to/SKILL_builder/install.sh --pack all --target .
 ```
 
 ## Adding a New Pack
@@ -78,5 +75,6 @@ SKILL_builder/
 │           └── skills/       (2 skills)
 ├── install.ps1
 ├── install.sh
+├── remote-install.sh
 └── README.md
 ```
