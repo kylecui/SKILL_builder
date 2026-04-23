@@ -26,9 +26,17 @@
 
 ## 放置方法
 
-将本包中的 `.opencode/` 目录复制到你的项目根目录。
+将本包中的 `.opencode/` 目录复制到你的项目根目录。同时把 `pyproject.toml` 和 `.python-version` 复制到项目根目录。
+
+然后运行：
+
+```bash
+uv sync
+```
 
 OpenCode 会从项目路径向上搜索 `.opencode/skills/<name>/SKILL.md`，并根据 `name` / `description` 决定何时加载技能。
+
+内置脚本通过 `uv run` 调用，详见 `UV-USAGE.md`。
 
 ## 设计原则
 

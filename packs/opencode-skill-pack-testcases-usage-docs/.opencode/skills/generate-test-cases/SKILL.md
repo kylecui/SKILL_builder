@@ -44,12 +44,6 @@ metadata:
 需要快速盘点时，先运行：
 
 ```bash
-python3 scripts/project_inventory.py .
-```
-
-若环境支持并且你希望隔离执行，也可使用：
-
-```bash
 uv run scripts/project_inventory.py .
 ```
 
@@ -158,7 +152,7 @@ uv run scripts/project_inventory.py .
 - 当你生成 JSON 版测试用例时，用 `scripts/validate_test_case_json.py` 做结构校验
 
 ```bash
-python3 scripts/validate_test_case_json.py path/to/test-cases.json
+uv run scripts/validate_test_case_json.py path/to/test-cases.json
 ```
 
 ## 按需读取的参考文件

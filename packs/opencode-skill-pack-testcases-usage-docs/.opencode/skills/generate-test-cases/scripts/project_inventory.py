@@ -3,39 +3,134 @@
 Inventory a repository for skill-driven analysis.
 Emits structured JSON to stdout and diagnostics to stderr.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import re
-import sys
 from pathlib import Path
-from typing import Iterable
 
 MAX_FILES_PER_BUCKET = 80
 TEXT_EXTS = {
-    ".md", ".markdown", ".txt", ".rst",
-    ".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".go", ".rs", ".c", ".cc", ".cpp", ".h",
-    ".yml", ".yaml", ".json", ".toml", ".ini", ".cfg", ".conf", ".env", ".sh", ".bash",
-    ".proto", ".graphql", ".sql",
+    ".md",
+    ".markdown",
+    ".txt",
+    ".rst",
+    ".py",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".java",
+    ".go",
+    ".rs",
+    ".c",
+    ".cc",
+    ".cpp",
+    ".h",
+    ".yml",
+    ".yaml",
+    ".json",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".conf",
+    ".env",
+    ".sh",
+    ".bash",
+    ".proto",
+    ".graphql",
+    ".sql",
 }
 
-API_HINTS = {"openapi", "swagger", "postman", "proto", "graphql", "routes", "controller", "api"}
-CONFIG_HINTS = {"config", ".env", "settings", "application.yml", "application.yaml", "docker-compose", "compose.yml", "compose.yaml"}
-DOC_HINTS = {"readme", "docs", "design", "architecture", "spec", "proposal", "manual", "guide"}
-TEST_HINTS = {"test", "tests", "spec", "e2e", "integration", "pytest", "playwright", "cypress", "jest", "vitest"}
-ENTRYPOINT_HINTS = {"main.py", "app.py", "server.py", "manage.py", "cli.py", "index.ts", "main.ts", "package.json", "pyproject.toml", "pom.xml", "go.mod", "cargo.toml"}
+API_HINTS = {
+    "openapi",
+    "swagger",
+    "postman",
+    "proto",
+    "graphql",
+    "routes",
+    "controller",
+    "api",
+}
+CONFIG_HINTS = {
+    "config",
+    ".env",
+    "settings",
+    "application.yml",
+    "application.yaml",
+    "docker-compose",
+    "compose.yml",
+    "compose.yaml",
+}
+DOC_HINTS = {
+    "readme",
+    "docs",
+    "design",
+    "architecture",
+    "spec",
+    "proposal",
+    "manual",
+    "guide",
+}
+TEST_HINTS = {
+    "test",
+    "tests",
+    "spec",
+    "e2e",
+    "integration",
+    "pytest",
+    "playwright",
+    "cypress",
+    "jest",
+    "vitest",
+}
+ENTRYPOINT_HINTS = {
+    "main.py",
+    "app.py",
+    "server.py",
+    "manage.py",
+    "cli.py",
+    "index.ts",
+    "main.ts",
+    "package.json",
+    "pyproject.toml",
+    "pom.xml",
+    "go.mod",
+    "cargo.toml",
+}
+
 
 def is_hidden_path(path: Path) -> bool:
-    return any(part.startswith(".") and part not in {".github", ".opencode"} for part in path.parts)
+    return any(
+        part.startswith(".") and part not in {".github", ".opencode"}
+        for part in path.parts
+    )
+
 
 def should_skip_dir(path: Path) -> bool:
     name = path.name.lower()
     return name in {
-        ".git", ".hg", ".svn", ".idea", ".vscode", ".venv", "venv", "node_modules", "__pycache__",
-        ".mypy_cache", ".pytest_cache", "dist", "build", "target", "out", "coverage", ".next",
+        ".git",
+        ".hg",
+        ".svn",
+        ".idea",
+        ".vscode",
+        ".venv",
+        "venv",
+        "node_modules",
+        "__pycache__",
+        ".mypy_cache",
+        ".pytest_cache",
+        "dist",
+        "build",
+        "target",
+        "out",
+        "coverage",
+        ".next",
     }
+
 
 def bucket_for(path: Path) -> set[str]:
     s = str(path).lower()
@@ -54,9 +149,22 @@ def bucket_for(path: Path) -> set[str]:
         buckets.add("entrypoints")
     if name in {"readme.md", "readme"}:
         buckets.add("readme")
-    if path.suffix.lower() in {".py", ".js", ".ts", ".tsx", ".jsx", ".java", ".go", ".rs", ".c", ".cc", ".cpp"}:
+    if path.suffix.lower() in {
+        ".py",
+        ".js",
+        ".ts",
+        ".tsx",
+        ".jsx",
+        ".java",
+        ".go",
+        ".rs",
+        ".c",
+        ".cc",
+        ".cpp",
+    }:
         buckets.add("source_code")
     return buckets
+
 
 def infer_project_type(paths: list[Path]) -> list[str]:
     names = {p.name.lower() for p in paths}
@@ -83,6 +191,7 @@ def infer_project_type(paths: list[Path]) -> list[str]:
         result.append("cli-oriented")
     return result or ["unknown"]
 
+
 def summarize_bucket(bucket_paths: list[Path], base: Path) -> list[str]:
     items = []
     for p in bucket_paths[:MAX_FILES_PER_BUCKET]:
@@ -92,12 +201,15 @@ def summarize_bucket(bucket_paths: list[Path], base: Path) -> list[str]:
             items.append(str(p))
     return items
 
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Scan a project and emit structured inventory JSON for OpenCode skills.",
     )
     parser.add_argument("root", nargs="?", default=".", help="Project root to scan")
-    parser.add_argument("--max-files", type=int, default=4000, help="Hard cap on scanned files")
+    parser.add_argument(
+        "--max-files", type=int, default=4000, help="Hard cap on scanned files"
+    )
     args = parser.parse_args()
 
     base = Path(args.root).resolve()
@@ -128,7 +240,11 @@ def main() -> int:
                 break
             p = root_path / filename
             count += 1
-            if p.suffix.lower() not in TEXT_EXTS and filename.lower() not in {"readme", "dockerfile", "makefile"}:
+            if p.suffix.lower() not in TEXT_EXTS and filename.lower() not in {
+                "readme",
+                "dockerfile",
+                "makefile",
+            }:
                 continue
             scanned.append(p)
             for bucket in bucket_for(p):
@@ -149,6 +265,7 @@ def main() -> int:
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

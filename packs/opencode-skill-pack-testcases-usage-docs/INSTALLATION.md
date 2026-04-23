@@ -4,6 +4,14 @@
 
 把本包中的 `.opencode/` 目录复制到你的项目根目录。
 
+同时把 `pyproject.toml` 和 `.python-version` 复制到项目根目录（如果项目根目录还没有这两个文件）。
+
+## 初始化 uv 环境
+
+```bash
+uv sync
+```
+
 ## 检查点
 
 确认以下路径存在：
@@ -11,6 +19,8 @@
 ```text
 .opencode/skills/generate-test-cases/SKILL.md
 .opencode/skills/generate-usage-docs/SKILL.md
+pyproject.toml
+.python-version
 ```
 
 ## 调用建议

@@ -1,0 +1,10 @@
+[project]
+name = "opencode-skill-pack-testcases-usage-docs"
+version = "1.0.0"
+description = "OpenCode test-case and usage-doc generation skills with uv-managed helper scripts"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
