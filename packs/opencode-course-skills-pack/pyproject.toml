@@ -1,0 +1,10 @@
+[project]
+name = "opencode-course-skills-pack"
+version = "1.3.1"
+description = "OpenCode course development skills pack with uv-managed helper scripts"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
