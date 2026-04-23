@@ -8,12 +8,12 @@
 
 .EXAMPLE
     # One-liner:
-    irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1 | iex
+    irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1 | iex
     # Then call the function:
     Install-SkillPack -Pack course
 
     # Or inline:
-    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack course -Target .
+    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course -Target .
 #>
 [CmdletBinding()]
 param(
@@ -22,7 +22,7 @@ param(
     [switch]$Force,
     [switch]$List,
     [string]$Repo = "kylecui/SKILL_builder",
-    [string]$Branch = "main",
+    [string]$Branch = "master",
     [string]$GitHubToken
 )
 

@@ -16,29 +16,29 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 **Bash (macOS / Linux / WSL):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack course
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack all --target ~/my-project
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack testdocs --force
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --target ~/my-project
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack testdocs --force
 ```
 
 **PowerShell (Windows):**
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack course
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack all -Target .
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack testdocs -Force
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Target .
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack testdocs -Force
 ```
 
 **Private repos** — pass a token:
 
 ```bash
 curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
-  https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh \
+  https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh \
   | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
 ```
 
 ```powershell
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.ps1))) -Pack course -GitHubToken $env:GITHUB_TOKEN
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course -GitHubToken $env:GITHUB_TOKEN
 ```
 
 ### Local (if you've cloned the repo)

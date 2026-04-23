@@ -3,17 +3,17 @@
 # Remote installer for OpenCode skill packs from GitHub.
 #
 # Usage (curl one-liner):
-#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack course
-#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack all --target ~/my-project
-#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | bash -s -- --pack testdocs --force
+#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
+#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --target ~/my-project
+#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack testdocs --force
 #
 # For private repos, set GITHUB_TOKEN:
-#   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://raw.githubusercontent.com/kylecui/SKILL_builder/main/remote-install.sh | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
+#   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
 #
 set -euo pipefail
 
 REPO="kylecui/SKILL_builder"
-BRANCH="main"
+BRANCH="master"
 
 # --- Pack alias registry ---
 declare -A ALIASES=(
