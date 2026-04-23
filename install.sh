@@ -17,6 +17,7 @@ PACKS_DIR="$SCRIPT_DIR/packs"
 declare -A ALIASES=(
     [course]="opencode-course-skills-pack"
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
+    [deploy]="repo-deploy-ops-skill-pack"
 )
 
 # --- Defaults ---

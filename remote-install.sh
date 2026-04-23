@@ -19,8 +19,9 @@ BRANCH="master"
 declare -A ALIASES=(
     [course]="opencode-course-skills-pack"
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
+    [deploy]="repo-deploy-ops-skill-pack"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack")
 
 # --- Defaults ---
 PACK=""
@@ -59,6 +60,7 @@ if $LIST; then
     echo "------------------------------------------------------------"
     echo "  opencode-course-skills-pack (alias: course)"
     echo "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
+    echo "  repo-deploy-ops-skill-pack (alias: deploy)"
     echo ""
     exit 0
 fi

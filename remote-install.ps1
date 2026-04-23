@@ -32,8 +32,9 @@ $ErrorActionPreference = "Stop"
 $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
+    "deploy"   = "repo-deploy-ops-skill-pack"
 }
-$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs")
+$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack")
 
 # --- List mode ---
 if ($List) {
@@ -41,6 +42,7 @@ if ($List) {
     Write-Host ("-" * 60)
     Write-Host "  opencode-course-skills-pack (alias: course)"
     Write-Host "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
+    Write-Host "  repo-deploy-ops-skill-pack (alias: deploy)"
     Write-Host ""
     return
 }

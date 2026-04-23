@@ -43,6 +43,7 @@ $PacksDir = Join-Path $ScriptRoot "packs"
 $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
+    "deploy"   = "repo-deploy-ops-skill-pack"
 }
 
 function Get-PackFullName([string]$name) {

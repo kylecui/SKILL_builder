@@ -8,6 +8,7 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 |-------|------|--------|----------|--------|
 | `course` | opencode-course-skills-pack | 15 | 10 | 8 |
 | `testdocs` | opencode-skill-pack-testcases-usage-docs | 2 | 0 | 0 |
+| `deploy` | repo-deploy-ops-skill-pack | 7 | 0 | 0 |
 
 ## Install
 
@@ -79,9 +80,12 @@ SKILL_builder/
 │   │   │   ├── commands/     (10 commands)
 │   │   │   └── agents/       (8 agents)
 │   │   └── pack-manifest.json
-│   └── opencode-skill-pack-testcases-usage-docs/
+│   ├── opencode-skill-pack-testcases-usage-docs/
+│   │   └── .opencode/
+│   │       └── skills/       (2 skills)
+│   └── repo-deploy-ops-skill-pack/
 │       └── .opencode/
-│           └── skills/       (2 skills)
+│           └── skills/       (7 skills)
 ├── install.ps1
 ├── install.sh
 ├── remote-install.ps1

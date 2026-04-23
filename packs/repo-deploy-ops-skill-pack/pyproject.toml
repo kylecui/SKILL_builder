@@ -1,0 +1,10 @@
+[project]
+name = "repo-deploy-ops-skill-pack"
+version = "1.0.0"
+description = "OpenCode skills for repo deployment, verification, operations, and incident rollback"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
