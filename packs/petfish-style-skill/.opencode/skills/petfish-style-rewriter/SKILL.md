@@ -178,6 +178,22 @@ Remove spaces between:
 - English technical term + Chinese verb
 - Chinese + number/unit when it forms a compact technical expression, unless readability clearly requires spacing
 
+### Slash-separated terms
+
+When `/`-separated English terms appear adjacent to Chinese text, remove spaces around `/` and between the terms and Chinese characters.
+
+Write:
+
+- 根据API/CLI/SDK/配置文件生成文档
+- 支持HTTP/HTTPS/WebSocket协议
+- 通过CI/CD流水线部署
+
+Do not write:
+
+- 根据 API / CLI / SDK / 配置文件生成文档
+- 支持 HTTP / HTTPS / WebSocket 协议
+- 通过 CI / CD 流水线部署
+
 ### Exceptions
 
 A space may remain when:

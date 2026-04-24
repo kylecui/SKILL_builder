@@ -11,6 +11,15 @@
 -英文技术词 + 中文动词：`Webhook挂载`
 -英文缩写 + 中文名词：`XDP程序`、`TLS握手`
 
+### 斜杠分隔词
+
+用`/`分隔的英文词组与中文相邻时，去除`/`两侧及中英之间的空格：
+
+- ✅ `根据API/CLI/SDK/配置文件生成文档`
+- ❌ `根据 API / CLI / SDK / 配置文件生成文档`
+- ✅ `支持HTTP/HTTPS/WebSocket协议`
+- ❌ `支持 HTTP / HTTPS / WebSocket 协议`
+
 ### 保留空格的情况
 
 -英文是完整短语或句子：`该模块实现了 access control at network layer 的基本能力。`
