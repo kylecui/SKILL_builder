@@ -3,7 +3,7 @@
 ## Repo source
 - Local path:
 - GitHub URL:
-- Branch / tag / commit:
+- Branch/tag/commit:
 
 ## Stack summary
 - Language/runtime:
@@ -26,8 +26,8 @@
 - MQ:
 - Object storage:
 - Reverse proxy/TLS:
-- Cron / worker:
-- Volumes / persistent data:
+- Cron/worker:
+- Volumes/persistent data:
 
 ## Required configuration
 - Environment variables:
@@ -40,6 +40,6 @@
 2.
 3.
 
-## Risks / blockers
+## Risks/blockers
 - 
 -

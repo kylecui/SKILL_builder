@@ -19,12 +19,12 @@ Write or refine lesson-level course content.
 For each chapter or lesson, cover:
 
 1. teaching objective
-2. key terms / concepts
+2. key terms/concepts
 3. explanation path
 4. examples or demonstrations
 5. common misunderstandings
 6. summary
-7. optional reflection / exercise
+7. optional reflection/exercise
 
 # Authoring behavior
 

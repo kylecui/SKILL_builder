@@ -23,7 +23,7 @@ Review along these axes:
 - learning-objective alignment
 - content clarity
 - lab executability
-- learner / instructor material separation
+- learner/instructor material separation
 - formatting and naming consistency
 - release readiness
 

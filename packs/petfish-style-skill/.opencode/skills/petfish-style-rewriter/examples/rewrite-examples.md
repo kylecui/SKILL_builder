@@ -4,7 +4,7 @@
 
 ### Input
 
-接入层支持 Webhook 挂载。接入事件包括 Git 提交，Issue 更新和 PR 合并。
+接入层支持Webhook挂载。接入事件包括Git提交，Issue更新和PR合并。
 
 ### Output
 

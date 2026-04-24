@@ -3,10 +3,10 @@
 ## Target
 - Service:
 - Environment:
-- URL / endpoint:
+- URL/endpoint:
 - Time:
 
-## Health / readiness
+## Health/readiness
 - Check:
 - Result:
 - Evidence:
@@ -16,12 +16,12 @@
 - Result:
 - Evidence:
 
-## Logs / dependencies
+## Logs/dependencies
 - Check:
 - Result:
 - Evidence:
 
 ## Verdict
-- Pass / Fail:
+- Pass/Fail:
 - Blocking issues:
 - Follow-up actions:

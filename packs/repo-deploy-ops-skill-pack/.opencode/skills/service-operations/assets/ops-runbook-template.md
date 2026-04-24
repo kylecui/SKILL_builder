@@ -5,7 +5,7 @@
 - Environment:
 - Owners:
 - Repo:
-- Current version / commit:
+- Current version/commit:
 
 ## Layout
 - Release path:
@@ -21,7 +21,7 @@
 - Status command:
 - Log command:
 
-## Health / verification
+## Health/verification
 - Health endpoint:
 - Smoke test:
 - Key ports:
@@ -31,7 +31,7 @@
 - Cache:
 - MQ:
 - Storage:
-- Reverse proxy / TLS:
+- Reverse proxy/TLS:
 
 ## Common incidents
 1.

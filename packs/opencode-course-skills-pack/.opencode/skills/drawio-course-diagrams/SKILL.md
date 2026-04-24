@@ -12,7 +12,7 @@ metadata:
 
 # Purpose
 
-Create or revise diagrams intended for draw.io / diagrams.net usage in course projects.
+Create or revise diagrams intended for draw.io/diagrams.net usage in course projects.
 
 # Activation cues
 

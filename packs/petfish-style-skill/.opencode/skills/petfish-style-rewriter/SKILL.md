@@ -1,6 +1,6 @@
 ---
 name: petfish-style-rewriter
-description: Use this skill when the user asks to rewrite, polish, humanize, simplify, de-AI, formalize, or express content in Petfish's writing style. It rewrites Chinese or English technical, academic, business, course, proposal, patent, and email content into a clear, structured, concise, evidence-based, engineering-oriented style. Trigger especially for phrases such as "用我的语言习惯表达", "说人话", "润色", "去 AI 味", "按我的风格写", or "make it sound human but still professional".
+description: Use this skill when the user asks to rewrite, polish, humanize, simplify, de-AI, formalize, or express content in Petfish's writing style. It rewrites Chinese or English technical, academic, business, course, proposal, patent, and email content into a clear, structured, concise, evidence-based, engineering-oriented style. Trigger especially for phrases such as "用我的语言习惯表达", "说人话", "润色", "去AI味", "按我的风格写", or "make it sound human but still professional".
 compatibility: opencode
 metadata:
   version: "3.0.0"
@@ -22,13 +22,13 @@ The goal is to make the text sound like a real technical professional wrote it, 
 
 Use this skill when the user asks for any of the following:
 
-- 用我的语言习惯表达
-- 按我的风格写
-- 说人话
-- 去 AI 味
-- 润色一下
-- 改得更自然
-- 改得更像人写的
+-用我的语言习惯表达
+-按我的风格写
+-说人话
+-去AI味
+-润色一下
+-改得更自然
+-改得更像人写的
 - rewrite in my style
 - make this clearer
 - make this more professional but less AI-like
@@ -124,13 +124,13 @@ Avoid paragraphs that only restate the topic without adding information.
 
 Preferred connectors:
 
-- 因此
-- 另一方面
-- 具体来说
-- 从这个角度看
-- 这意味着
-- 在这种情况下
-- 与此相对应
+-因此
+-另一方面
+-具体来说
+-从这个角度看
+-这意味着
+-在这种情况下
+-与此相对应
 - However
 - Therefore
 - In this case
@@ -167,7 +167,7 @@ Do not write:
 - AF_XDP 队列
 - JSON 格式
 - Markdown 文档
-- OpenCode 项目
+- OpenCode项目
 
 ### General spacing rule
 
@@ -220,16 +220,16 @@ Better:
 
 Avoid the following:
 
-- 在当今……背景下
-- 赋能
-- 普惠
-- 拔高
-- 民主化
-- 银弹
-- 全链路闭环 if used only as a slogan
-- 立体认知
-- 能力放大器
-- 蜂群式攻击 unless technically necessary
+-在当今……背景下
+-赋能
+-普惠
+-拔高
+-民主化
+-银弹
+-全链路闭环if used only as a slogan
+-立体认知
+-能力放大器
+-蜂群式攻击unless technically necessary
 - excessive quotation marks for emphasis
 - excessive parallel rhetoric
 - vague claims without evidence
@@ -242,20 +242,20 @@ Chinese output should be formal but readable.
 
 Use:
 
-- 清晰的小标题
-- 适度编号
-- 短结论
-- 具体分析
-- 必要时使用"本章小结"或"综上所述"
+-清晰的小标题
+-适度编号
+-短结论
+-具体分析
+-必要时使用"本章小结"或"综上所述"
 
 Avoid:
 
-- 过度排比
-- 过度修辞
-- 复杂长句
-- 口号式表达
-- 互联网金句
-- 不必要的引号
+-过度排比
+-过度修辞
+-复杂长句
+-口号式表达
+-互联网金句
+-不必要的引号
 
 ## English Writing Profile
 

@@ -1,4 +1,4 @@
-# 常用 Markdown 模板
+# 常用Markdown模板
 
 ## 1. 课程总纲
 ```markdown
@@ -27,7 +27,7 @@
 ## 课后任务
 ```
 
-## 3. QA 记录
+## 3. QA记录
 ```markdown
 # [审阅标题]
 

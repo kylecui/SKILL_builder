@@ -31,27 +31,27 @@ If the request is narrow and clearly belongs to one specialized skill, let that 
 
 1. Determine the workstream:
    - planning
-   - outline / syllabus
+   - outline/syllabus
    - lesson content
-   - labs / exercises
+   - labs/exercises
    - learner materials
    - instructor materials
    - QA review
    - QC remediation and reporting
-   - repository / directory organization
+   - repository/directory organization
 
 2. Decide whether the request is:
    - create from scratch
    - modify existing material
-   - review / critique
-   - normalize / restructure
+   - review/critique
+   - normalize/restructure
    - generate deliverable package
 
 3. Produce or update a minimal execution frame before drafting:
    - target audience
    - training objective
    - delivery format
-   - expected duration / lesson count
+   - expected duration/lesson count
    - prerequisite knowledge
    - required outputs
    - quality bar
@@ -97,7 +97,7 @@ If the request is narrow and clearly belongs to one specialized skill, let that 
 - [ ] Identified target artifact(s)
 - [ ] Applied the most relevant specialized skill
 - [ ] Preserved consistency with existing course assets
-- [ ] Added or updated QA / QC implications when relevant
+- [ ] Added or updated QA/QC implications when relevant
 - [ ] Left the project structure cleaner than before
 
 # Gotchas

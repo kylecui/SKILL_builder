@@ -1,9 +1,9 @@
-## TC-XXX 标题
+## TC-XXX标题
 
 - **Objective**:
 - **Target**:
 - **Preconditions**:
-- **Inputs / Test Data**:
+- **Inputs/Test Data**:
 - **Steps**:
   1.
   2.

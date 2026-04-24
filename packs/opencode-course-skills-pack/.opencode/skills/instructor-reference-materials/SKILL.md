@@ -17,7 +17,7 @@ Create materials that help instructors deliver the course consistently and confi
 # Typical content
 
 - chapter teaching notes
-- talk tracks / speaking points
+- talk tracks/speaking points
 - timing suggestions
 - emphasis cues
 - demo reminders

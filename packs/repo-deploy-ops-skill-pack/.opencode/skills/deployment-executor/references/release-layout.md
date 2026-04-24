@@ -16,13 +16,13 @@
 
 ## 优点
 
-- 回滚简单
-- 新旧版本隔离
-- 更容易记录版本与变更
-- 更适合 systemd WorkingDirectory / ExecStart 指向 `current`
+-回滚简单
+-新旧版本隔离
+-更容易记录版本与变更
+-更适合systemd WorkingDirectory/ExecStart指向 `current`
 
 ## 适用场景
 
-- Python / Node / Go / Java 主机部署
-- 需要频繁升级
-- 需要清晰留痕
+- Python/Node/Go/Java主机部署
+-需要频繁升级
+-需要清晰留痕

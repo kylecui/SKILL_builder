@@ -41,7 +41,7 @@ Always cover:
 Use this default structure:
 
 1. Project objective
-2. Scope in / out
+2. Scope in/out
 3. Delivery assumptions
 4. Workstreams
 5. Milestones

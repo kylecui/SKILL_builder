@@ -1,4 +1,4 @@
-# OpenCode课程开发Commands / Agents使用指南
+# OpenCode课程开发Commands/Agents使用指南
 
 本文件用于说明本包新增的 `.opencode/commands/` 与 `.opencode/agents/` 的职责、关系与推荐用法。
 
@@ -150,10 +150,10 @@
 
 不要把这三层混成一层。更推荐的做法是：
 
-- 全局规则写进 `AGENTS.md`
-- 专项流程写进 `skills`
-- 高频工作流写成 `commands`
-- 专业角色拆成 `agents`
+-全局规则写进 `AGENTS.md`
+-专项流程写进 `skills`
+-高频工作流写成 `commands`
+-专业角色拆成 `agents`
 
 
 ## uv运行约定

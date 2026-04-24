@@ -26,7 +26,7 @@ Convert QA findings into controlled remediation and decision-ready reporting.
    - verified
    - deferred
 5. summarize residual risk
-6. generate release / hold recommendation
+6. generate release/hold recommendation
 
 # Reporting expectations
 

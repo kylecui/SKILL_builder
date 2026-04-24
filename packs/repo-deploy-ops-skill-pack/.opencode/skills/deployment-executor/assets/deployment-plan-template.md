@@ -18,16 +18,16 @@
 - Shared log path:
 - Shared data path:
 
-## Build / install
+## Build/install
 - Build command:
 - Dependency install command:
 
-## Config / secrets
+## Config/secrets
 - Env file:
 - Config file:
-- Certificates / keys:
+- Certificates/keys:
 
-## Start / restart
+## Start/restart
 - Service manager:
 - Start command:
 - Restart command:

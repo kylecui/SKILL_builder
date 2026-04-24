@@ -1,6 +1,6 @@
 ---
 name: target-host-readiness
-description: 检查目标 Linux 主机是否满足部署前提，包括 OS、架构、磁盘、内存、网络、端口占用、docker/systemd/nginx/python/node 等运行时、目录可写性，以及部署权限。Use when preparing a server for deployment, validating a target host, checking environment drift, or confirming prerequisites before rollout.
+description: 检查目标Linux主机是否满足部署前提，包括OS、架构、磁盘、内存、网络、端口占用、docker/systemd/nginx/python/node等运行时、目录可写性，以及部署权限。Use when preparing a server for deployment, validating a target host, checking environment drift, or confirming prerequisites before rollout.
 compatibility: Best for Linux hosts with ssh access. Requires Python 3.11+; uv recommended. Helpful commands: ssh, df, ss, systemctl, journalctl, docker.
 license: Internal use
 ---
@@ -11,18 +11,18 @@ license: Internal use
 
 ## 何时使用
 
-- 用户指定了一台或多台 Linux 主机
-- 要做首次部署
-- 要做升级前检查
-- 要做巡检或排查环境漂移
-- 不确定 docker / systemd / runtime / 端口 / 路径 / 权限 是否具备
+-用户指定了一台或多台Linux主机
+-要做首次部署
+-要做升级前检查
+-要做巡检或排查环境漂移
+-不确定docker/systemd/runtime /端口/路径/权限 是否具备
 
 ## 核心原则
 
-- 先探测，再部署
-- 尽量结构化输出，不要只贴零散命令结果
-- 对权限不足、命令缺失、目录不存在要明确标记
-- 把“阻塞项”与“建议项”区分开
+-先探测，再部署
+-尽量结构化输出，不要只贴零散命令结果
+-对权限不足、命令缺失、目录不存在要明确标记
+-把“阻塞项”与“建议项”区分开
 
 ## 推荐脚本
 
@@ -30,7 +30,7 @@ license: Internal use
 uv run scripts/host_probe.py --ssh user@host --output -
 ```
 
-如果当前 shell 就在目标机上，也可：
+如果当前shell就在目标机上，也可：
 
 ```bash
 uv run scripts/host_probe.py --local --output -
@@ -40,7 +40,7 @@ uv run scripts/host_probe.py --local --output -
 
 ### 系统与资源
 - hostname
-- OS 发行版
+- OS发行版
 - kernel
 - arch
 - CPU
@@ -65,17 +65,17 @@ uv run scripts/host_probe.py --local --output -
 - `helm`
 
 ### 权限与目录
-- 是否能写入部署目录
-- 是否能写入日志目录
-- 是否能创建/切换软链
-- 是否有 sudo
-- 是否能管理 systemd / docker
+-是否能写入部署目录
+-是否能写入日志目录
+-是否能创建/切换软链
+-是否有sudo
+-是否能管理systemd/docker
 
 ### 网络与端口
-- 核心端口是否被占用
-- 出站连通性是否满足依赖下载/镜像拉取
-- 监听端口与预期部署端口是否冲突
-- 反向代理端口是否已被 nginx/Caddy/已有服务占用
+-核心端口是否被占用
+-出站连通性是否满足依赖下载/镜像拉取
+-监听端口与预期部署端口是否冲突
+-反向代理端口是否已被nginx/Caddy/已有服务占用
 
 ## 输出结构
 
@@ -92,31 +92,31 @@ uv run scripts/host_probe.py --local --output -
 
 ### 可直接部署
 当以下条件基本满足时：
-- 所需运行时齐备
-- 目录可用
-- 关键端口不冲突
-- 有足够权限
-- 网络条件满足
+-所需运行时齐备
+-目录可用
+-关键端口不冲突
+-有足够权限
+-网络条件满足
 
 ### 需先补环境
 当以下任一成立：
-- 缺少核心运行时
-- 无法管理服务
-- 关键端口冲突
-- 部署目录不可写
-- 证书/反代/挂载目录等依赖未准备
+-缺少核心运行时
+-无法管理服务
+-关键端口冲突
+-部署目录不可写
+-证书/反代/挂载目录等依赖未准备
 
 ## gotchas
 
-- `python3` 存在不代表可直接跑项目，可能仍缺 `uv`、venv 或编译依赖
+- `python3` 存在不代表可直接跑项目，可能仍缺 `uv`、venv或编译依赖
 - `docker` 存在不代表当前用户有权限使用
-- `systemctl` 存在不代表该环境启用了 systemd
-- 端口空闲不代表外部网络可达，还要看防火墙/安全组/反向代理
-- 临时手工修环境时，要记录成可复现步骤
+- `systemctl` 存在不代表该环境启用了systemd
+-端口空闲不代表外部网络可达，还要看防火墙/安全组/反向代理
+-临时手工修环境时，要记录成可复现步骤
 
 ## 何时读取参考文件
 
-- 需要判断“端口冲突是否可接受”时，读取：
+-需要判断“端口冲突是否可接受”时，读取：
   `references/port-and-proxy-notes.md`
-- 需要区分“阻塞项/建议项”时，读取：
+-需要区分“阻塞项/建议项”时，读取：
   `references/readiness-decision-rules.md`

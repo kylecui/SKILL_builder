@@ -14,4 +14,4 @@
 
 ## Documentation Map
 
-## Limitations / Notes
+## Limitations/Notes

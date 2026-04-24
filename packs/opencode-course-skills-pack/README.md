@@ -54,7 +54,7 @@ uv sync
 
 
 
-## Commands / Agents
+## Commands/Agents
 
 本包现已附带 `.opencode/commands/` 与 `.opencode/agents/`：
 
@@ -105,9 +105,9 @@ uv run .opencode/skills/course-quality-control-reporting/scripts/render_qc_repor
 新增了以下内容：
 - `COURSE-PROJECT-STRUCTURE-STANDARD.md`：课程项目标准目录与命名规范
 - `HISTORY-TO-SKILLS-ROADMAP.md`：从历史讨论继续沉淀skills的路线图
-- 强化 `course-directory-structure`：
-  - 支持“初始化 / 审计 / 整理建议”三段式使用方式
-  - 增补目录整理检查单与结构策略说明
+-强化 `course-directory-structure`：
+  -支持“初始化/审计/整理建议”三段式使用方式
+  -增补目录整理检查单与结构策略说明
 - `.opencode/commands/`：课程开发高频工作流命令入口
 - `.opencode/agents/`：课程开发角色化代理定义
 - `COMMANDS-AND-AGENTS-GUIDE.md`：commands与agents的关系、职责与推荐工作流

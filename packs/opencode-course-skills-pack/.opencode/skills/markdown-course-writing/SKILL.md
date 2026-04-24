@@ -29,7 +29,7 @@ Use Markdown as the primary authoring format. Favor:
 Choose the closest template:
 
 - development plan
-- syllabus / outline
+- syllabus/outline
 - lesson chapter
 - lab guide
 - learner handout

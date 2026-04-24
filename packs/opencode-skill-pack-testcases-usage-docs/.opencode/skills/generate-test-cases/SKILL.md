@@ -17,11 +17,11 @@ metadata:
 
 当用户提出以下意图时加载本技能：
 
-- 根据当前项目/模块/设计文档生成 test cases
-- 为 API、CLI、Web UI、SDK、库或服务生成测试矩阵
-- 生成冒烟测试、回归测试、负面测试、边界测试、验收测试
-- 根据设计和代码补齐测试覆盖思路
-- 为现有仓库提供自动化测试建议或测试文件骨架
+-根据当前项目/模块/设计文档生成test cases
+-为API、CLI、Web UI、SDK、库或服务生成测试矩阵
+-生成冒烟测试、回归测试、负面测试、边界测试、验收测试
+-根据设计和代码补齐测试覆盖思路
+-为现有仓库提供自动化测试建议或测试文件骨架
 
 若用户只是问“什么是单元测试”“测试有哪些类型”之类的通用问题，不必强制加载本技能。
 
@@ -35,10 +35,10 @@ metadata:
 优先读取以下材料：
 
 1. README、docs、设计说明、架构说明
-2. API 规范、proto、route、controller、schema
+2. API规范、proto、route、controller、schema
 3. 配置样例、环境变量、构建文件
-4. 入口程序、CLI 帮助、public API
-5. 现有 tests 目录与测试框架
+4. 入口程序、CLI帮助、public API
+5. 现有tests目录与测试框架
 6. 关键状态机、权限、持久化、外部依赖
 
 需要快速盘点时，先运行：
@@ -49,33 +49,33 @@ uv run scripts/project_inventory.py .
 
 先根据盘点结果判断项目更接近哪一类：
 
-- library / SDK
+- library/SDK
 - CLI
 - Web API
 - Web UI
-- daemon / service
-- pipeline / job
-- research prototype / demo
+- daemon/service
+- pipeline/job
+- research prototype/demo
 
-### Step 2：建立 traceability map
+### Step 2：建立traceability map
 
-把“设计目标 / 模块 / 接口 / 风险”映射到“应测点”。
+把“设计目标/模块/接口/风险”映射到“应测点”。
 
 至少覆盖这些维度：
 
-- 功能点
-- 正常路径
-- 异常路径
-- 边界条件
-- 状态迁移
-- 认证 / 授权
-- 幂等 / 重试 / 回滚
-- 并发 / 时序
-- 配置错误
-- 外部依赖失败
-- 兼容性 / 回归风险
+-功能点
+-正常路径
+-异常路径
+-边界条件
+-状态迁移
+-认证/授权
+-幂等/重试/回滚
+-并发/时序
+-配置错误
+-外部依赖失败
+-兼容性/回归风险
 
-输出 traceability matrix 时，优先使用 `assets/traceability-matrix-template.md` 的格式。
+输出traceability matrix时，优先使用 `assets/traceability-matrix-template.md` 的格式。
 
 ### Step 3：生成分层测试策略
 
@@ -83,12 +83,12 @@ uv run scripts/project_inventory.py .
 
 - Unit tests
 - Integration tests
-- Contract / API tests
+- Contract/API tests
 - CLI tests
-- E2E / UI tests
+- E2E/UI tests
 - Smoke tests
 - Regression tests
-- Negative / abuse-adjacent tests
+- Negative/abuse-adjacent tests
 - Acceptance tests
 
 给出“优先自动化的部分”和“暂时保留人工验证的部分”。
@@ -98,16 +98,16 @@ uv run scripts/project_inventory.py .
 每条测试用例至少要包含：
 
 - Case ID
-- 标题
-- 目标 / Objective
-- Target module / endpoint / command
+-标题
+-目标/ Objective
+- Target module/endpoint/command
 - Preconditions
-- 输入 / 测试数据
-- 步骤
-- 预期结果
-- 优先级
-- 覆盖风险
-- 自动化建议
+-输入/测试数据
+-步骤
+-预期结果
+-优先级
+-覆盖风险
+-自动化建议
 
 优先使用 `assets/test-case-template.md` 或 `assets/test-cases.schema.json` 的字段风格。
 
@@ -115,10 +115,10 @@ uv run scripts/project_inventory.py .
 
 只有在项目结构足够清晰时，才生成：
 
-- pytest 测试文件骨架
-- Playwright spec 骨架
-- API contract 测试骨架
-- 样例 fixtures / mocks / fake services 建议
+- pytest测试文件骨架
+- Playwright spec骨架
+- API contract测试骨架
+-样例fixtures/mocks/fake services建议
 
 **不得编造**不存在的模块名、路径、路由、参数、配置键或行为。
 
@@ -132,24 +132,24 @@ uv run scripts/project_inventory.py .
 4. 测试用例列表
 5. 建议的目录布局
 6. 自动化优先级
-7. 不确定项 / 待确认项
+7. 不确定项/待确认项
 
 ## 风格要求
 
-- 以项目事实为基础，不给空泛建议
-- 先整体策略，再详细 case
-- 正常 / 异常 / 边界 三类必须区分
-- 说明“这个 case 是从设计推导，还是从实现观察得出”
-- 发现信息不足时，明确写出假设
-- 优先给默认方案，不要一上来列很多菜单式选项
+-以项目事实为基础，不给空泛建议
+-先整体策略，再详细case
+-正常/异常/边界 三类必须区分
+-说明“这个case是从设计推导，还是从实现观察得出”
+-发现信息不足时，明确写出假设
+-优先给默认方案，不要一上来列很多菜单式选项
 
 ## Gotchas
 
-- 现有实现不等于设计意图；不要把偶然实现细节当作产品需求
-- 若项目已经有测试约定，优先沿用现有框架和目录命名
-- 若无现有测试框架，先给推荐，再给骨架
-- 对高风险路径，宁可少写空泛 case，也要写清楚关键前置条件和断言
-- 当你生成 JSON 版测试用例时，用 `scripts/validate_test_case_json.py` 做结构校验
+-现有实现不等于设计意图；不要把偶然实现细节当作产品需求
+-若项目已经有测试约定，优先沿用现有框架和目录命名
+-若无现有测试框架，先给推荐，再给骨架
+-对高风险路径，宁可少写空泛case，也要写清楚关键前置条件和断言
+-当你生成JSON版测试用例时，用 `scripts/validate_test_case_json.py` 做结构校验
 
 ```bash
 uv run scripts/validate_test_case_json.py path/to/test-cases.json
@@ -157,15 +157,15 @@ uv run scripts/validate_test_case_json.py path/to/test-cases.json
 
 ## 按需读取的参考文件
 
-- 需要详细输出规范时，读：`references/OUTPUT_FORMAT.md`
-- 需要 traceability 思路时，读：`references/TRACEABILITY_GUIDE.md`
-- 需要判断哪些风险最常漏测时，读：`references/GOTCHAS.md`
+-需要详细输出规范时，读：`references/OUTPUT_FORMAT.md`
+-需要traceability思路时，读：`references/TRACEABILITY_GUIDE.md`
+-需要判断哪些风险最常漏测时，读：`references/GOTCHAS.md`
 
 ## 最终目标
 
 产出必须让维护者能够直接拿去做下一步工作：
 
-- 讨论测试范围
-- 编写自动化测试
-- 制定回归计划
-- 作为验收或 QA 清单
+-讨论测试范围
+-编写自动化测试
+-制定回归计划
+-作为验收或QA清单

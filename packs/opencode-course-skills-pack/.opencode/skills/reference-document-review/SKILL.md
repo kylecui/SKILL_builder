@@ -28,7 +28,7 @@ Turn heterogeneous reference material into structured course-development inputs.
    - terminology
    - data points
    - examples
-   - diagrams / tables
+   - diagrams/tables
 3. Normalize the extracted content into a course-ready note.
 4. Flag uncertainty, OCR risk, or contradiction.
 5. Route the cleaned result into the next relevant artifact.
@@ -37,7 +37,7 @@ Turn heterogeneous reference material into structured course-development inputs.
 
 - summary
 - structured extraction
-- comparison / diff
+- comparison/diff
 - lesson-input conversion
 - issue spotting
 - terminology normalization

@@ -22,10 +22,10 @@ uv run .opencode/skills/service-operations/scripts/release_state.py init --state
 
 ## 设计原则
 
-- 仓库根目录提供 `pyproject.toml` 与 `.python-version`
-- 默认使用项目级 `.venv`
-- 所有文档示例统一使用 `uv run`
-- 内置脚本同时支持 `#!/usr/bin/env -S uv run` shebang和PEP 723 inline metadata，可直接执行
+-仓库根目录提供 `pyproject.toml` 与 `.python-version`
+-默认使用项目级 `.venv`
+-所有文档示例统一使用 `uv run`
+-内置脚本同时支持 `#!/usr/bin/env -S uv run` shebang和PEP 723 inline metadata，可直接执行
 
 ## 何时需要额外依赖
 

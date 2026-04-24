@@ -1,4 +1,4 @@
-# Incident / Rollback Record
+# Incident/Rollback Record
 
 ## Summary
 - Time:

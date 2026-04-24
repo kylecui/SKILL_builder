@@ -21,12 +21,12 @@ Each lab should explicitly define:
 1. objective
 2. prerequisites
 3. environment
-4. inputs / files / tools
+4. inputs/files/tools
 5. procedure
 6. expected result
 7. validation method
 8. troubleshooting
-9. instructor answer / reference path
+9. instructor answer/reference path
 
 # Review checks
 
@@ -41,7 +41,7 @@ Each lab should explicitly define:
 Prefer two linked artifacts:
 
 - learner lab guide
-- instructor answer key / reference notes
+- instructor answer key/reference notes
 
 # Gotchas
 

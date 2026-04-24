@@ -9,21 +9,21 @@
 - `docs/configuration.md`
 - `docs/troubleshooting.md`
 
-## 如果项目是 API 服务
+## 如果项目是API服务
 
 增加：
 
 - `docs/api.md`
 - `docs/deployment.md`
 
-## 如果项目是 CLI
+## 如果项目是CLI
 
 增加：
 
 - `docs/cli.md`
 - `docs/examples.md`
 
-## 如果项目是 SDK / library
+## 如果项目是SDK/library
 
 增加：
 

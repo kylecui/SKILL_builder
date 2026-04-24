@@ -21,10 +21,10 @@ uv run .opencode/skills/generate-usage-docs/scripts/validate_docset.py path/to/d
 
 ## 设计原则
 
-- 仓库根目录提供 `pyproject.toml` 与 `.python-version`
-- 默认使用项目级 `.venv`
-- 所有文档示例统一使用 `uv run`
-- 当前内置脚本仅依赖Python标准库，但仍建议通过uv保持执行入口一致
+-仓库根目录提供 `pyproject.toml` 与 `.python-version`
+-默认使用项目级 `.venv`
+-所有文档示例统一使用 `uv run`
+-当前内置脚本仅依赖Python标准库，但仍建议通过uv保持执行入口一致
 
 ## 何时需要额外依赖
 

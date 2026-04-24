@@ -15,32 +15,32 @@
 3. **把高频纠偏变成gotchas**  
    凡是你反复纠正代理的地方，都应进入相应skill的gotchas或review checklist。
 
-4. **把重用价值高的文本变成template / reference**  
+4. **把重用价值高的文本变成template/reference**  
    例如：教学计划模板、QA检查单、QC报告模板、实验说明模板。
 
 ## 3. 优先沉淀的历史能力
 
-### 3.1 战略性课程定位
+### 3.1战略性课程定位
 适合继续拆成：
 - `course-positioning-strategy`
 - `training-system-architecture`
 
-### 3.2 课程资产映射与客户提案
+### 3.2课程资产映射与客户提案
 适合继续拆成：
 - `course-proposal-authoring`
 - `course-asset-mapping`
 
-### 3.3 AI安全 / 架构类课程方法论
+### 3.3 AI安全/架构类课程方法论
 适合继续拆成：
 - `ai-security-course-patterns`
 - `agent-architecture-course-patterns`
 
-### 3.4 论坛 / 圆桌 / 讲稿型课程周边材料
+### 3.4论坛/圆桌/讲稿型课程周边材料
 适合继续拆成：
 - `panel-discussion-materials`
 - `speaker-card-authoring`
 
-### 3.5 课程实验与项目实战
+### 3.5课程实验与项目实战
 适合继续拆成：
 - `lab-environment-planning`
 - `capstone-project-design`
@@ -49,29 +49,29 @@
 
 ### 第一阶段：先把“课程生产线”固化
 已纳入当前包：
-- 目录结构
-- 开发计划
-- 课程提纲
-- 课程正文
-- 实验
-- 学员资料
-- 教师资料
+-目录结构
+-开发计划
+-课程提纲
+-课程正文
+-实验
+-学员资料
+-教师资料
 - QA
 - QC
 
 ### 第二阶段：再把“你们自己的课程方法论”固化
 建议从以下来源提炼：
-- CAISP / CAIDCP融合课程讨论
+- CAISP/CAIDCP融合课程讨论
 - AI人才体系与课程架构讨论
-- 圆桌与讲稿策划讨论
-- 客户提案书与实施计划讨论
-- 对课程“战略写手”的偏好与约束
+-圆桌与讲稿策划讨论
+-客户提案书与实施计划讨论
+-对课程“战略写手”的偏好与约束
 
 ### 第三阶段：再做“评测与触发优化”
 建议为关键skills增加：
 - `evals/evals.json`
-- should-trigger / should-not-trigger样例
-- 常见输入输出样例
+- should-trigger/should-not-trigger样例
+-常见输入输出样例
 - description调优记录
 
 ## 5. 每个新skill的建议结构

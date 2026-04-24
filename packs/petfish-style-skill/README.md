@@ -9,7 +9,7 @@ The skill is not a generic polishing tool. It is designed to convert AI-like, rh
 ## Core Features
 
 - Petfish-style structural rewrite
-- Strict / normal / light / academic / email modes
+- Strict/normal/light/academic/email modes
 - Structure-first analysis workflow
 - Anti-pattern rules for AI-like writing
 - Chinese and English writing profiles
