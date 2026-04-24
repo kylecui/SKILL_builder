@@ -33,8 +33,9 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
+    "kyle"     = "kyle-style-skill"
 }
-$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack")
+$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "kyle-style-skill")
 
 # --- List mode ---
 if ($List) {
@@ -43,6 +44,7 @@ if ($List) {
     Write-Host "  opencode-course-skills-pack (alias: course)"
     Write-Host "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
     Write-Host "  repo-deploy-ops-skill-pack (alias: deploy)"
+    Write-Host "  kyle-style-skill (alias: kyle)"
     Write-Host ""
     return
 }
@@ -51,7 +53,7 @@ if ($List) {
 function Resolve-PackName([string]$name) {
     if ($Aliases.ContainsKey($name)) { return $Aliases[$name] }
     if ($AllPacks -contains $name) { return $name }
-    Write-Error "Unknown pack: '$name'. Available: course, testdocs, all"
+    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, kyle, all"
     exit 1
 }
 
@@ -104,6 +106,28 @@ try {
         }
 
         Write-Host "`nInstalling pack: $packName" -ForegroundColor Green
+
+        $packRoot = Join-Path $packsDir $packName
+
+        # --- Copy root-level AGENTS.md if present ---
+        $agentsMd = Join-Path $packRoot "AGENTS.md"
+        if (Test-Path $agentsMd) {
+            $dstAgents = Join-Path $Target "AGENTS.md"
+            if ((Test-Path $dstAgents) -and -not $Force) {
+                Write-Warning "  SKIP AGENTS.md (exists, use -Force to overwrite)"
+                $skipped++
+            } else {
+                Copy-Item -Path $agentsMd -Destination $dstAgents -Force
+                Write-Host "  + AGENTS.md" -ForegroundColor DarkGreen
+                $installed++
+            }
+        }
+
+        # --- Notify about opencode.example.json if present ---
+        $ocExample = Join-Path $packRoot "opencode.example.json"
+        if (Test-Path $ocExample) {
+            Write-Host "  INFO: Pack includes opencode.example.json — merge into your opencode.json manually if needed." -ForegroundColor Yellow
+        }
 
         foreach ($subdir in @("skills", "commands", "agents")) {
             $srcDir = Join-Path $packOpencode $subdir

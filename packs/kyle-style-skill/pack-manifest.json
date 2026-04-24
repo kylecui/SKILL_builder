@@ -1,0 +1,11 @@
+{
+  "name": "kyle-style-skill",
+  "version": "2.0.0",
+  "description": "OpenCode skill package for Kyle Cui style rewriting: structured, concise, logical, engineering-oriented writing.",
+  "skills": [
+    "kyle-style-rewriter"
+  ],
+  "entrypoints": [
+    ".opencode/skills/kyle-style-rewriter/SKILL.md"
+  ]
+}

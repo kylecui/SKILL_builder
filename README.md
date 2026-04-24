@@ -9,6 +9,7 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 | `course` | opencode-course-skills-pack | 15 | 10 | 8 |
 | `testdocs` | opencode-skill-pack-testcases-usage-docs | 2 | 0 | 0 |
 | `deploy` | repo-deploy-ops-skill-pack | 7 | 0 | 0 |
+| `kyle` | kyle-style-skill | 1 | 0 | 0 |
 
 ## Install
 
@@ -67,7 +68,9 @@ curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
 1. Create a directory under `packs/` with your pack name
 2. Add a `.opencode/` directory containing `skills/`, `commands/`, and/or `agents/`
 3. Optionally add a `pack-manifest.json` for metadata
-4. The install scripts will pick it up automatically — add an alias in the scripts if you want a short name
+4. If the pack includes an `AGENTS.md`, it will be copied to the target project root during install (skipped if one already exists unless `--force` is used)
+5. If the pack includes an `opencode.example.json`, the installer will remind the user to merge it manually
+6. The install scripts will pick it up automatically — add an alias in the scripts if you want a short name
 
 ## Structure
 
@@ -86,6 +89,11 @@ SKILL_builder/
 │   └── repo-deploy-ops-skill-pack/
 │       └── .opencode/
 │           └── skills/       (7 skills)
+│   └── kyle-style-skill/
+│       ├── .opencode/
+│       │   └── skills/       (1 skill)
+│       ├── AGENTS.md
+│       └── opencode.example.json
 ├── install.ps1
 ├── install.sh
 ├── remote-install.ps1

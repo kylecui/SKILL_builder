@@ -8,8 +8,8 @@
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs
-    Full names also accepted: opencode-course-skills-pack, opencode-skill-pack-testcases-usage-docs
+    Aliases: course, testdocs, deploy, kyle
+    Full names also accepted.
 
 .PARAMETER Target
     Path to the target project. Defaults to current directory.
@@ -44,6 +44,7 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
+    "kyle"     = "kyle-style-skill"
 }
 
 function Get-PackFullName([string]$name) {
@@ -110,6 +111,28 @@ foreach ($packName in $packsToInstall) {
     }
 
     Write-Host "`nInstalling pack: $packName" -ForegroundColor Green
+
+    $packRoot = Join-Path $PacksDir $packName
+
+    # --- Copy root-level AGENTS.md if present ---
+    $agentsMd = Join-Path $packRoot "AGENTS.md"
+    if (Test-Path $agentsMd) {
+        $dstAgents = Join-Path $Target "AGENTS.md"
+        if ((Test-Path $dstAgents) -and -not $Force) {
+            Write-Warning "  SKIP AGENTS.md (exists, use -Force to overwrite)"
+            $skipped++
+        } else {
+            Copy-Item -Path $agentsMd -Destination $dstAgents -Force
+            Write-Host "  + AGENTS.md" -ForegroundColor DarkGreen
+            $installed++
+        }
+    }
+
+    # --- Notify about opencode.example.json if present ---
+    $ocExample = Join-Path $packRoot "opencode.example.json"
+    if (Test-Path $ocExample) {
+        Write-Host "  INFO: Pack includes opencode.example.json — merge into your opencode.json manually if needed." -ForegroundColor Yellow
+    }
 
     foreach ($subdir in @("skills", "commands", "agents")) {
         $srcDir = Join-Path $packOpencode $subdir

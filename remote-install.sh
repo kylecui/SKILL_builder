@@ -20,8 +20,9 @@ declare -A ALIASES=(
     [course]="opencode-course-skills-pack"
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
     [deploy]="repo-deploy-ops-skill-pack"
+    [kyle]="kyle-style-skill"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "kyle-style-skill")
 
 # --- Defaults ---
 PACK=""
@@ -42,7 +43,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--force]"
             echo ""
             echo "Options:"
-            echo "  --pack <name|all>   Pack to install (course, testdocs, or all)"
+            echo "  --pack <name|all>   Pack to install (course, testdocs, deploy, kyle, or all)"
             echo "  --target <path>     Target project directory (default: .)"
             echo "  --force             Overwrite existing skills"
             echo "  --list              List available packs"
@@ -61,6 +62,7 @@ if $LIST; then
     echo "  opencode-course-skills-pack (alias: course)"
     echo "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
     echo "  repo-deploy-ops-skill-pack (alias: deploy)"
+    echo "  kyle-style-skill (alias: kyle)"
     echo ""
     exit 0
 fi
@@ -84,7 +86,7 @@ resolve_pack() {
                 return
             fi
         done
-        echo "Unknown pack: '$name'. Available: course, testdocs, all" >&2
+        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, kyle, all" >&2
         exit 1
     fi
 }
@@ -139,6 +141,26 @@ for pack_name in "${PACKS[@]}"; do
 
     echo ""
     echo "Installing pack: $pack_name"
+
+    pack_root="$PACKS_DIR/$pack_name"
+
+    # --- Copy root-level AGENTS.md if present ---
+    if [[ -f "$pack_root/AGENTS.md" ]]; then
+        dst_agents="$TARGET/AGENTS.md"
+        if [[ -f "$dst_agents" ]] && ! $FORCE; then
+            echo "  SKIP AGENTS.md (exists, use --force to overwrite)"
+            ((skipped++)) || true
+        else
+            cp "$pack_root/AGENTS.md" "$dst_agents"
+            echo "  + AGENTS.md"
+            ((installed++)) || true
+        fi
+    fi
+
+    # --- Notify about opencode.example.json if present ---
+    if [[ -f "$pack_root/opencode.example.json" ]]; then
+        echo "  INFO: Pack includes opencode.example.json — merge into your opencode.json manually if needed."
+    fi
 
     for subdir in skills commands agents; do
         src_dir="$pack_opencode/$subdir"

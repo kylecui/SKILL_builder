@@ -18,6 +18,7 @@ declare -A ALIASES=(
     [course]="opencode-course-skills-pack"
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
     [deploy]="repo-deploy-ops-skill-pack"
+    [kyle]="kyle-style-skill"
 )
 
 # --- Defaults ---
@@ -35,7 +36,7 @@ while [[ $# -gt 0 ]]; do
         --list)   LIST=true; shift ;;
         -h|--help)
             echo "Usage: $0 --pack <name|all> [--target <path>] [--force] [--list]"
-            echo "Aliases: course, testdocs"
+            echo "Aliases: course, testdocs, deploy, kyle"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
@@ -109,6 +110,26 @@ for pack_name in "${PACKS[@]}"; do
 
     echo ""
     echo "Installing pack: $pack_name"
+
+    pack_root="$PACKS_DIR/$pack_name"
+
+    # --- Copy root-level AGENTS.md if present ---
+    if [[ -f "$pack_root/AGENTS.md" ]]; then
+        dst_agents="$TARGET/AGENTS.md"
+        if [[ -f "$dst_agents" ]] && ! $FORCE; then
+            echo "  SKIP AGENTS.md (exists, use --force to overwrite)"
+            ((skipped++)) || true
+        else
+            cp "$pack_root/AGENTS.md" "$dst_agents"
+            echo "  + AGENTS.md"
+            ((installed++)) || true
+        fi
+    fi
+
+    # --- Notify about opencode.example.json if present ---
+    if [[ -f "$pack_root/opencode.example.json" ]]; then
+        echo "  INFO: Pack includes opencode.example.json — merge into your opencode.json manually if needed."
+    fi
 
     for subdir in skills commands agents; do
         src_dir="$pack_opencode/$subdir"
