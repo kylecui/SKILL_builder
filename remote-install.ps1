@@ -28,6 +28,105 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# --- Merge helpers ---
+
+function Merge-AgentsMd([string]$srcFile, [string]$dstFile, [string]$packName, [switch]$ForceOverwrite) {
+    $beginMarker = "<!-- BEGIN pack: $packName -->"
+    $endMarker = "<!-- END pack: $packName -->"
+    $srcContent = (Get-Content $srcFile -Raw).TrimEnd()
+    $wrappedContent = "$beginMarker`n$srcContent`n$endMarker"
+
+    if (-not (Test-Path $dstFile)) {
+        Set-Content -Path $dstFile -Value $wrappedContent -NoNewline
+        return "created"
+    }
+
+    $existing = Get-Content $dstFile -Raw
+    if ($existing -match [regex]::Escape($beginMarker)) {
+        if (-not $ForceOverwrite) { return "exists" }
+        $pattern = "(?s)" + [regex]::Escape($beginMarker) + ".*?" + [regex]::Escape($endMarker)
+        $replaced = [regex]::Replace($existing, $pattern, $wrappedContent)
+        Set-Content -Path $dstFile -Value $replaced -NoNewline
+        return "updated"
+    }
+
+    $merged = $existing.TrimEnd() + "`n`n" + $wrappedContent + "`n"
+    Set-Content -Path $dstFile -Value $merged -NoNewline
+    return "merged"
+}
+
+function Merge-OpencodeJson([string]$srcFile, [string]$dstFile, [switch]$ForceOverwrite) {
+    if (-not (Test-Path $dstFile)) {
+        Copy-Item $srcFile $dstFile
+        return "created"
+    }
+
+    $src = Get-Content $srcFile -Raw | ConvertFrom-Json
+    $dst = Get-Content $dstFile -Raw | ConvertFrom-Json
+
+    foreach ($p1 in $src.PSObject.Properties) {
+        if (-not $dst.PSObject.Properties[$p1.Name]) {
+            $dst | Add-Member -NotePropertyName $p1.Name -NotePropertyValue $p1.Value
+        } elseif ($p1.Value -is [PSCustomObject] -and $dst.($p1.Name) -is [PSCustomObject]) {
+            foreach ($p2 in $p1.Value.PSObject.Properties) {
+                $level2 = $dst.($p1.Name)
+                if (-not $level2.PSObject.Properties[$p2.Name]) {
+                    $level2 | Add-Member -NotePropertyName $p2.Name -NotePropertyValue $p2.Value
+                } elseif ($p2.Value -is [PSCustomObject] -and $level2.($p2.Name) -is [PSCustomObject]) {
+                    foreach ($p3 in $p2.Value.PSObject.Properties) {
+                        $level3 = $level2.($p2.Name)
+                        if (-not $level3.PSObject.Properties[$p3.Name] -or $ForceOverwrite) {
+                            if ($level3.PSObject.Properties[$p3.Name]) {
+                                $level3.($p3.Name) = $p3.Value
+                            } else {
+                                $level3 | Add-Member -NotePropertyName $p3.Name -NotePropertyValue $p3.Value
+                            }
+                        }
+                    }
+                } elseif ($ForceOverwrite) {
+                    $level2.($p2.Name) = $p2.Value
+                }
+            }
+        } elseif ($ForceOverwrite) {
+            $dst.($p1.Name) = $p1.Value
+        }
+    }
+
+    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile
+    return "merged"
+}
+
+function Update-InstalledPacks([string]$targetOpencode, [string]$packName, [string]$manifestFile) {
+    $regFile = Join-Path $targetOpencode "installed-packs.json"
+    $entry = @{ installed_at = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
+
+    if (Test-Path $manifestFile) {
+        $m = Get-Content $manifestFile -Raw | ConvertFrom-Json
+        if ($m.PSObject.Properties['version'])     { $entry.version = $m.version }
+        if ($m.PSObject.Properties['skills'])       { $entry.skills = $m.skills }
+        if ($m.PSObject.Properties['description'])  { $entry.description = $m.description }
+    }
+
+    if (-not (Test-Path $targetOpencode)) {
+        New-Item -ItemType Directory -Path $targetOpencode -Force | Out-Null
+    }
+
+    if (Test-Path $regFile) {
+        $reg = Get-Content $regFile -Raw | ConvertFrom-Json
+    } else {
+        $reg = [PSCustomObject]@{ packs = [PSCustomObject]@{} }
+    }
+
+    $entryObj = [PSCustomObject]$entry
+    if ($reg.packs.PSObject.Properties[$packName]) {
+        $reg.packs.$packName = $entryObj
+    } else {
+        $reg.packs | Add-Member -NotePropertyName $packName -NotePropertyValue $entryObj
+    }
+
+    $reg | ConvertTo-Json -Depth 10 | Set-Content $regFile
+}
+
 # --- Pack alias registry ---
 $Aliases = @{
     "course"   = "opencode-course-skills-pack"
@@ -109,25 +208,34 @@ try {
 
         $packRoot = Join-Path $packsDir $packName
 
-        # --- Copy root-level AGENTS.md if present ---
+        # --- Merge AGENTS.md ---
         $agentsMd = Join-Path $packRoot "AGENTS.md"
         if (Test-Path $agentsMd) {
             $dstAgents = Join-Path $Target "AGENTS.md"
-            if ((Test-Path $dstAgents) -and -not $Force) {
-                Write-Warning "  SKIP AGENTS.md (exists, use -Force to overwrite)"
-                $skipped++
-            } else {
-                Copy-Item -Path $agentsMd -Destination $dstAgents -Force
-                Write-Host "  + AGENTS.md" -ForegroundColor DarkGreen
-                $installed++
+            $result = Merge-AgentsMd $agentsMd $dstAgents $packName -ForceOverwrite:$Force
+            switch ($result) {
+                "created"  { Write-Host "  + AGENTS.md (created)" -ForegroundColor DarkGreen; $installed++ }
+                "merged"   { Write-Host "  + AGENTS.md (merged)" -ForegroundColor DarkGreen; $installed++ }
+                "updated"  { Write-Host "  + AGENTS.md (updated)" -ForegroundColor DarkGreen; $installed++ }
+                "exists"   { Write-Warning "  SKIP AGENTS.md (pack section exists, use -Force to update)"; $skipped++ }
             }
         }
 
-        # --- Notify about opencode.example.json if present ---
+        # --- Merge opencode.json from opencode.example.json ---
         $ocExample = Join-Path $packRoot "opencode.example.json"
         if (Test-Path $ocExample) {
-            Write-Host "  INFO: Pack includes opencode.example.json — merge into your opencode.json manually if needed." -ForegroundColor Yellow
+            $dstOc = Join-Path $Target "opencode.json"
+            $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$Force
+            switch ($result) {
+                "created" { Write-Host "  + opencode.json (created from example)" -ForegroundColor DarkGreen; $installed++ }
+                "merged"  { Write-Host "  + opencode.json (merged)" -ForegroundColor DarkGreen; $installed++ }
+            }
         }
+
+        # --- Update installed-packs registry ---
+        $manifestFile = Join-Path $packRoot "pack-manifest.json"
+        Update-InstalledPacks $TargetOpencode $packName $manifestFile
+        Write-Host "  + .opencode/installed-packs.json (registry updated)" -ForegroundColor DarkGreen
 
         foreach ($subdir in @("skills", "commands", "agents")) {
             $srcDir = Join-Path $packOpencode $subdir
