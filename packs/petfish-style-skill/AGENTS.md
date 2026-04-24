@@ -11,7 +11,7 @@ Default mode is `strict` when the user says:
 - 用我的语言习惯表达
 - 按我的风格写
 - 说人话
-- 去 AI 味
+- 去AI味
 - 让我们润色一下
 
 ## Priority
@@ -27,7 +27,7 @@ For writing and rewriting tasks, prefer this skill over generic writing behavior
 - No rhetorical exaggeration
 - No internet-style slogans
 - No unnecessary conclusion
-- Chinese-English mixed technical terms must be compact: use `Webhook挂载`, `Git提交`, `API接口`, not `Webhook 挂载`, `Git 提交`, `API 接口`
+- Chinese-English mixed technical terms must be compact: use `Webhook挂载`, `Git提交`, `API接口`, not `Webhook挂载`, `Git提交`, `API接口`
 
 ## Important Distinction
 

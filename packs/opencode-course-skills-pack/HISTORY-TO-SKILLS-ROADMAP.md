@@ -1,22 +1,22 @@
-# 从历史课程沟通沉淀为 Skills 的路线图
+# 从历史课程沟通沉淀为Skills的路线图
 
 ## 1. 目标
 
-将历史对话、项目经验、课程方法论和交付偏好，逐步沉淀为可复用的 OpenCode skills，而不是每次从头解释。
+将历史对话、项目经验、课程方法论和交付偏好，逐步沉淀为可复用的OpenCode skills，而不是每次从头解释。
 
 ## 2. 沉淀原则
 
 1. **先沉淀反复出现的模式**  
-   例如：课程总纲设计、模块拆解、实验设计、QA 评审、教师资料与学员资料分离。
+   例如：课程总纲设计、模块拆解、实验设计、QA评审、教师资料与学员资料分离。
 
 2. **先沉淀“方法”，再沉淀“答案”**  
    不是把某次课程内容原样固化，而是提炼成以后还能复用的工作法。
 
-3. **把高频纠偏变成 gotchas**  
-   凡是你反复纠正代理的地方，都应进入相应 skill 的 gotchas 或 review checklist。
+3. **把高频纠偏变成gotchas**  
+   凡是你反复纠正代理的地方，都应进入相应skill的gotchas或review checklist。
 
-4. **把重用价值高的文本变成 template / reference**  
-   例如：教学计划模板、QA 检查单、QC 报告模板、实验说明模板。
+4. **把重用价值高的文本变成template / reference**  
+   例如：教学计划模板、QA检查单、QC报告模板、实验说明模板。
 
 ## 3. 优先沉淀的历史能力
 
@@ -30,7 +30,7 @@
 - `course-proposal-authoring`
 - `course-asset-mapping`
 
-### 3.3 AI 安全 / 架构类课程方法论
+### 3.3 AI安全 / 架构类课程方法论
 适合继续拆成：
 - `ai-security-course-patterns`
 - `agent-architecture-course-patterns`
@@ -61,20 +61,20 @@
 
 ### 第二阶段：再把“你们自己的课程方法论”固化
 建议从以下来源提炼：
-- CAISP / CAIDCP 融合课程讨论
-- AI 人才体系与课程架构讨论
+- CAISP / CAIDCP融合课程讨论
+- AI人才体系与课程架构讨论
 - 圆桌与讲稿策划讨论
 - 客户提案书与实施计划讨论
 - 对课程“战略写手”的偏好与约束
 
 ### 第三阶段：再做“评测与触发优化”
-建议为关键 skills 增加：
+建议为关键skills增加：
 - `evals/evals.json`
-- should-trigger / should-not-trigger 样例
+- should-trigger / should-not-trigger样例
 - 常见输入输出样例
-- description 调优记录
+- description调优记录
 
-## 5. 每个新 skill 的建议结构
+## 5. 每个新skill的建议结构
 
 ```text
 skill-name/
@@ -90,7 +90,7 @@ skill-name/
     evals.json
 ```
 
-## 6. 建议新增的后续 skill 清单
+## 6. 建议新增的后续skill清单
 
 - `course-proposal-authoring`
 - `course-asset-mapping`

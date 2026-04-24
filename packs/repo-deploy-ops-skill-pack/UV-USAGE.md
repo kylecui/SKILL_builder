@@ -1,6 +1,6 @@
-# uv 使用说明
+# uv使用说明
 
-本包默认采用 **uv 管理的仓库级 Python 环境** 来运行辅助脚本。
+本包默认采用 **uv管理的仓库级Python环境** 来运行辅助脚本。
 
 ## 推荐方式
 
@@ -25,7 +25,7 @@ uv run .opencode/skills/service-operations/scripts/release_state.py init --state
 - 仓库根目录提供 `pyproject.toml` 与 `.python-version`
 - 默认使用项目级 `.venv`
 - 所有文档示例统一使用 `uv run`
-- 内置脚本同时支持 `#!/usr/bin/env -S uv run` shebang 和 PEP 723 inline metadata，可直接执行
+- 内置脚本同时支持 `#!/usr/bin/env -S uv run` shebang和PEP 723 inline metadata，可直接执行
 
 ## 何时需要额外依赖
 

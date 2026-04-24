@@ -1,6 +1,6 @@
-# OpenCode 课程开发 Skills 包
+# OpenCode课程开发Skills包
 
-本包面向使用 OpenCode 进行课程开发的场景，采用符合 OpenCode 的 `.opencode/skills/<name>/SKILL.md` 目录结构。
+本包面向使用OpenCode进行课程开发的场景，采用符合OpenCode的 `.opencode/skills/<name>/SKILL.md` 目录结构。
 
 ## 技能列表
 
@@ -36,9 +36,9 @@ your-project/
 
 
 
-## uv 环境
+## uv环境
 
-本包现在默认采用 **uv 管理的项目级 Python 虚拟环境** 来运行辅助脚本。项目根目录已附带 `pyproject.toml` 与 `.python-version`。
+本包现在默认采用 **uv管理的项目级Python虚拟环境** 来运行辅助脚本。项目根目录已附带 `pyproject.toml` 与 `.python-version`。
 
 推荐先执行：
 
@@ -93,7 +93,7 @@ uv run .opencode/skills/course-directory-structure/scripts/bootstrap_course_tree
 uv run .opencode/skills/course-directory-structure/scripts/check_course_tree.py --root .
 ```
 
-## QC 报告生成
+## QC报告生成
 
 ```bash
 uv run .opencode/skills/course-quality-control-reporting/scripts/render_qc_report.py --input findings.json --output docs/07-qc/qc-report.md
@@ -104,18 +104,18 @@ uv run .opencode/skills/course-quality-control-reporting/scripts/render_qc_repor
 
 新增了以下内容：
 - `COURSE-PROJECT-STRUCTURE-STANDARD.md`：课程项目标准目录与命名规范
-- `HISTORY-TO-SKILLS-ROADMAP.md`：从历史讨论继续沉淀 skills 的路线图
+- `HISTORY-TO-SKILLS-ROADMAP.md`：从历史讨论继续沉淀skills的路线图
 - 强化 `course-directory-structure`：
   - 支持“初始化 / 审计 / 整理建议”三段式使用方式
   - 增补目录整理检查单与结构策略说明
 - `.opencode/commands/`：课程开发高频工作流命令入口
 - `.opencode/agents/`：课程开发角色化代理定义
-- `COMMANDS-AND-AGENTS-GUIDE.md`：commands 与 agents 的关系、职责与推荐工作流
+- `COMMANDS-AND-AGENTS-GUIDE.md`：commands与agents的关系、职责与推荐工作流
 
 ## 建议你下一步怎么用
 
 1. 先把这套包复制到一个真实课程项目根目录
 2. 运行目录初始化或审计脚本
 3. 把你现有的课程文档放入 `docs/`、`references/`、`assets/`
-4. 先用 `course-development-orchestrator` 驱动，再让专项 skill 接管
-5. 每完成一轮高价值课程工作，就把方法、模板和 gotchas 反向沉淀回 skills 包
+4. 先用 `course-development-orchestrator` 驱动，再让专项skill接管
+5. 每完成一轮高价值课程工作，就把方法、模板和gotchas反向沉淀回skills包

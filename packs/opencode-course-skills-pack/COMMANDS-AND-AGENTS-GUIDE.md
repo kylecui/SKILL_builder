@@ -1,4 +1,4 @@
-# OpenCode 课程开发 Commands / Agents 使用指南
+# OpenCode课程开发Commands / Agents使用指南
 
 本文件用于说明本包新增的 `.opencode/commands/` 与 `.opencode/agents/` 的职责、关系与推荐用法。
 
@@ -48,10 +48,10 @@
 
 ---
 
-## Agents 说明
+## Agents说明
 
 ### curriculum-build
-主代理。适合在你想让 OpenCode 作为“课程项目经理 + 主执行者”直接工作时使用。
+主代理。适合在你想让OpenCode作为“课程项目经理 + 主执行者”直接工作时使用。
 
 ### directory-curator
 专管目录初始化、结构审计、归位与命名规范。
@@ -69,14 +69,14 @@
 专管参考资料阅读、归纳、适配与可用素材提炼。
 
 ### qa-auditor
-只做 QA 审阅，不直接改文件。
+只做QA审阅，不直接改文件。
 
 ### qc-gatekeeper
-只做 QC 门禁与发布判断，不直接改文件。
+只做QC门禁与发布判断，不直接改文件。
 
 ---
 
-## Commands 说明
+## Commands说明
 
 ### /course-init
 初始化或接管课程项目。
@@ -97,16 +97,16 @@
 阅读参考资料并提炼成课程可用结论。
 
 ### /course-qa
-执行 QA 审阅。
+执行QA审阅。
 
 ### /course-qc
-执行 QC 门禁判断。
+执行QC门禁判断。
 
 ### /course-release-ready
-检查是否可以形成 release 版本。
+检查是否可以形成release版本。
 
 ### /course-methodize
-把本轮经验反向沉淀回方法论与 skills。
+把本轮经验反向沉淀回方法论与skills。
 
 ---
 
@@ -141,7 +141,7 @@
 
 ---
 
-## 与 AGENTS.md、skills 的关系
+## 与AGENTS.md、skills的关系
 
 - `AGENTS.md` 规定项目总规则
 - `commands` 提供快捷入口
@@ -156,6 +156,6 @@
 - 专业角色拆成 `agents`
 
 
-## uv 运行约定
+## uv运行约定
 
-本包中的 Python 辅助脚本默认通过项目根目录的 `uv` 环境运行。涉及脚本的命令示例请统一写成 `uv run path/to/script.py ...`，不要再把系统 `python3` 作为默认入口。
+本包中的Python辅助脚本默认通过项目根目录的 `uv` 环境运行。涉及脚本的命令示例请统一写成 `uv run path/to/script.py ...`，不要再把系统 `python3` 作为默认入口。
