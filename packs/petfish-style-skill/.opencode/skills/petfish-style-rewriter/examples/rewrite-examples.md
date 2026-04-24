@@ -1,6 +1,16 @@
 # Rewrite Examples
 
-## Example 1: remove AI-style expression
+## Example 1: Chinese-English spacing normalization
+
+### Input
+
+接入层支持 Webhook 挂载。接入事件包括 Git 提交，Issue 更新和 PR 合并。
+
+### Output
+
+接入层支持Webhook挂载。接入事件包括Git提交、Issue更新和PR合并。
+
+## Example 2: remove AI-style expression
 
 ### Input
 
@@ -14,7 +24,7 @@
 
 因此，安全分析不能只关注单一指标，而需要围绕攻击过程建立跨数据源的分析方法。
 
-## Example 2: formal Chinese technical writing
+## Example 3: formal Chinese technical writing
 
 ### Input
 
@@ -28,7 +38,7 @@ AI渗透测试智能体会改变攻击能力的使用方式。
 
 因此，防御方需要关注的不只是单个攻击工具的能力变化，而是攻击组织方式和执行效率的变化。
 
-## Example 3: English technical email
+## Example 4: English technical email
 
 ### Input
 

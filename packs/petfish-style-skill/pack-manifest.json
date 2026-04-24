@@ -1,6 +1,6 @@
 {
   "name": "petfish-style-skill",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Opencode skill package for Petfish style rewriting and humanized technical writing.",
   "compatibility": "opencode",
   "skills": [
@@ -13,7 +13,12 @@
     ".opencode/skills/petfish-style-rewriter/references/style-guide.md",
     ".opencode/skills/petfish-style-rewriter/references/anti-patterns.md",
     ".opencode/skills/petfish-style-rewriter/references/templates.md",
+    ".opencode/skills/petfish-style-rewriter/references/formatting-rules.md",
     ".opencode/skills/petfish-style-rewriter/scripts/style_check.py",
-    ".opencode/skills/petfish-style-rewriter/evals/evals.json"
+    ".opencode/skills/petfish-style-rewriter/scripts/normalize_text.py",
+    ".opencode/skills/petfish-style-rewriter/evals/evals.json",
+    ".opencode/skills/petfish-style-rewriter/examples/rewrite-examples.md",
+    ".opencode/skills/petfish-style-rewriter/assets/rewrite-request-template.md",
+    ".opencode/skills/petfish-style-rewriter/README.md"
   ]
 }
