@@ -1,4 +1,4 @@
-# uv Usage for kyle-style-skill
+# uv Usage for petfish-style-skill
 
 This pack uses [uv](https://docs.astral.sh/uv/) to manage Python environments and run scripts.
 
@@ -9,7 +9,7 @@ This pack uses [uv](https://docs.astral.sh/uv/) to manage Python environments an
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Run the style checker
-uv run .opencode/skills/kyle-style-rewriter/scripts/check_style.py output.md
+uv run .opencode/skills/petfish-style-rewriter/scripts/check_style.py output.md
 ```
 
 ## Why uv?

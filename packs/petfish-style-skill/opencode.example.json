@@ -1,7 +1,7 @@
 {
   "permission": {
     "skill": {
-      "kyle-style-rewriter": "allow"
+      "petfish-style-rewriter": "allow"
     }
   }
 }

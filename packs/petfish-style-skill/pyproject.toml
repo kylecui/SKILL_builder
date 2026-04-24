@@ -1,0 +1,8 @@
+[project]
+name = "petfish-style-skill"
+version = "2.0.0"
+description = "OpenCode skill package for Petfish style rewriting"
+requires-python = ">=3.9"
+
+[tool.uv]
+dev-dependencies = []

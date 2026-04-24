@@ -33,9 +33,9 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
-    "kyle"     = "kyle-style-skill"
+    "petfish"  = "petfish-style-skill"
 }
-$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "kyle-style-skill")
+$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "petfish-style-skill")
 
 # --- List mode ---
 if ($List) {
@@ -44,7 +44,7 @@ if ($List) {
     Write-Host "  opencode-course-skills-pack (alias: course)"
     Write-Host "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
     Write-Host "  repo-deploy-ops-skill-pack (alias: deploy)"
-    Write-Host "  kyle-style-skill (alias: kyle)"
+    Write-Host "  petfish-style-skill (alias: petfish)"
     Write-Host ""
     return
 }
@@ -53,7 +53,7 @@ if ($List) {
 function Resolve-PackName([string]$name) {
     if ($Aliases.ContainsKey($name)) { return $Aliases[$name] }
     if ($AllPacks -contains $name) { return $name }
-    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, kyle, all"
+    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, all"
     exit 1
 }
 

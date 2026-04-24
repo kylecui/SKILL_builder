@@ -9,7 +9,7 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 | `course` | opencode-course-skills-pack | 15 | 10 | 8 |
 | `testdocs` | opencode-skill-pack-testcases-usage-docs | 2 | 0 | 0 |
 | `deploy` | repo-deploy-ops-skill-pack | 7 | 0 | 0 |
-| `kyle` | kyle-style-skill | 1 | 0 | 0 |
+| `petfish` | petfish-style-skill | 1 | 0 | 0 |
 
 ## Install
 
@@ -89,7 +89,7 @@ SKILL_builder/
 │   └── repo-deploy-ops-skill-pack/
 │       └── .opencode/
 │           └── skills/       (7 skills)
-│   └── kyle-style-skill/
+│   └── petfish-style-skill/
 │       ├── .opencode/
 │       │   └── skills/       (1 skill)
 │       ├── AGENTS.md

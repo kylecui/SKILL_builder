@@ -8,7 +8,7 @@
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs, deploy, kyle
+    Aliases: course, testdocs, deploy, petfish
     Full names also accepted.
 
 .PARAMETER Target
@@ -44,7 +44,7 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
-    "kyle"     = "kyle-style-skill"
+    "petfish"  = "petfish-style-skill"
 }
 
 function Get-PackFullName([string]$name) {
