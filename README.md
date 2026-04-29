@@ -2,6 +2,8 @@
 
 OpenCode skill packs — build, maintain, and install custom skills into any project.
 
+Supports both **OpenCode** and **Google Antigravity** platforms.
+
 ## Packs
 
 | Alias | Pack | Skills | Commands | Agents |
@@ -14,22 +16,32 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 
 ## Install
 
+### Platform Support
+
+| Platform | `--platform` value | Skills dir | Agents dir | Commands dir |
+|----------|-------------------|------------|------------|--------------|
+| OpenCode | `opencode` (default) | `.opencode/skills/` | `.opencode/agents/` | `.opencode/commands/` |
+| Antigravity | `antigravity` | `.agents/skills/` | `.agents/rules/` | `.agents/workflows/` |
+| Both | `all` | Both paths | Both paths | Both paths |
+
+Antigravity mode additionally creates `GEMINI.md` (same content as `AGENTS.md`) and skips `opencode.json` merge.
+
 ### One-liner (remote — no clone needed)
 
 **Bash (macOS / Linux / WSL):**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --target ~/my-project
-curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack testdocs --force
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --platform antigravity
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack petfish --platform all --target ~/my-project
 ```
 
 **PowerShell (Windows):**
 
 ```powershell
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Target .
-& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack testdocs -Force
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform antigravity
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack petfish -Platform all -Target .
 ```
 
 **Private repos** — pass a token:
@@ -50,8 +62,8 @@ curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
 
 ```powershell
 .\install.ps1 -Pack course -Target C:\path\to\project
-.\install.ps1 -Pack all
-.\install.ps1 -Pack course -Target . -Force
+.\install.ps1 -Pack all -Platform antigravity
+.\install.ps1 -Pack petfish -Platform all -Force
 .\install.ps1 -List
 ```
 
@@ -59,8 +71,8 @@ curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
 
 ```bash
 ./install.sh --pack course --target ~/my-project
-./install.sh --pack all
-./install.sh --pack testdocs --target . --force
+./install.sh --pack all --platform antigravity
+./install.sh --pack petfish --platform all --force
 ./install.sh --list
 ```
 

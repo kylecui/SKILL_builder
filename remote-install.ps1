@@ -4,21 +4,20 @@
 
 .DESCRIPTION
     Downloads the repo tarball, extracts the requested pack, and copies
-    .opencode/skills/, commands/, agents/ into the target project.
+    skills, commands, agents into the target project.
+    Supports OpenCode and Antigravity platforms.
 
 .EXAMPLE
     # One-liner:
-    irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1 | iex
-    # Then call the function:
-    Install-SkillPack -Pack course
-
-    # Or inline:
     & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course -Target .
+    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform antigravity
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Pack,
     [string]$Target = ".",
+    [ValidateSet("opencode", "antigravity", "all")]
+    [string]$Platform = "opencode",
     [switch]$Force,
     [switch]$List,
     [string]$Repo = "kylecui/SKILL_builder",
@@ -27,6 +26,33 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+# --- Platform path configuration ---
+
+function Get-PlatformConfig([string]$platformName) {
+    switch ($platformName) {
+        "opencode" {
+            return @{
+                SkillsDir   = ".opencode/skills"
+                AgentsDir   = ".opencode/agents"
+                CommandsDir = ".opencode/commands"
+                RegistryDir = ".opencode"
+                MergeJson   = $true
+                GeminiMd    = $false
+            }
+        }
+        "antigravity" {
+            return @{
+                SkillsDir   = ".agents/skills"
+                AgentsDir   = ".agents/rules"
+                CommandsDir = ".agents/workflows"
+                RegistryDir = ".agents"
+                MergeJson   = $false
+                GeminiMd    = $true
+            }
+        }
+    }
+}
 
 # --- Merge helpers ---
 
@@ -96,8 +122,8 @@ function Merge-OpencodeJson([string]$srcFile, [string]$dstFile, [switch]$ForceOv
     return "merged"
 }
 
-function Update-InstalledPacks([string]$targetOpencode, [string]$packName, [string]$manifestFile) {
-    $regFile = Join-Path $targetOpencode "installed-packs.json"
+function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]$manifestFile) {
+    $regFile = Join-Path $registryDir "installed-packs.json"
     $entry = @{ installed_at = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
 
     if (Test-Path $manifestFile) {
@@ -107,8 +133,8 @@ function Update-InstalledPacks([string]$targetOpencode, [string]$packName, [stri
         if ($m.PSObject.Properties['description'])  { $entry.description = $m.description }
     }
 
-    if (-not (Test-Path $targetOpencode)) {
-        New-Item -ItemType Directory -Path $targetOpencode -Force | Out-Null
+    if (-not (Test-Path $registryDir)) {
+        New-Item -ItemType Directory -Path $registryDir -Force | Out-Null
     }
 
     if (Test-Path $regFile) {
@@ -166,7 +192,6 @@ $packsToInstall = if ($Pack -eq "all") {
 
 # --- Resolve target ---
 $Target = (Resolve-Path $Target -ErrorAction Stop).Path
-$TargetOpencode = Join-Path $Target ".opencode"
 
 # --- Download & extract tarball ---
 $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "skill_builder_$(Get-Random)"
@@ -195,77 +220,143 @@ try {
 
     $packsDir = Join-Path $extractDir.FullName "packs"
 
-    # --- Install ---
-    $installed = 0
-    $skipped = 0
+    # --- Install function for a given platform ---
+    function Install-ForPlatform([string]$platformName) {
+        $cfg = Get-PlatformConfig $platformName
 
-    foreach ($packName in $packsToInstall) {
-        $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
-        if (-not (Test-Path $packOpencode)) {
-            Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
-            continue
-        }
+        Write-Host "`n[$platformName] Installing..." -ForegroundColor Magenta
 
-        Write-Host "`nInstalling pack: $packName" -ForegroundColor Green
+        $installed = 0
+        $skipped = 0
 
-        $packRoot = Join-Path $packsDir $packName
-
-        # --- Merge AGENTS.md ---
-        $agentsMd = Join-Path $packRoot "AGENTS.md"
-        if (Test-Path $agentsMd) {
-            $dstAgents = Join-Path $Target "AGENTS.md"
-            $result = Merge-AgentsMd $agentsMd $dstAgents $packName -ForceOverwrite:$Force
-            switch ($result) {
-                "created"  { Write-Host "  + AGENTS.md (created)" -ForegroundColor DarkGreen; $installed++ }
-                "merged"   { Write-Host "  + AGENTS.md (merged)" -ForegroundColor DarkGreen; $installed++ }
-                "updated"  { Write-Host "  + AGENTS.md (updated)" -ForegroundColor DarkGreen; $installed++ }
-                "exists"   { Write-Warning "  SKIP AGENTS.md (pack section exists, use -Force to update)"; $skipped++ }
-            }
-        }
-
-        # --- Merge opencode.json from opencode.example.json ---
-        $ocExample = Join-Path $packRoot "opencode.example.json"
-        if (Test-Path $ocExample) {
-            $dstOc = Join-Path $Target "opencode.json"
-            $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$Force
-            switch ($result) {
-                "created" { Write-Host "  + opencode.json (created from example)" -ForegroundColor DarkGreen; $installed++ }
-                "merged"  { Write-Host "  + opencode.json (merged)" -ForegroundColor DarkGreen; $installed++ }
-            }
-        }
-
-        # --- Update installed-packs registry ---
-        $manifestFile = Join-Path $packRoot "pack-manifest.json"
-        Update-InstalledPacks $TargetOpencode $packName $manifestFile
-        Write-Host "  + .opencode/installed-packs.json (registry updated)" -ForegroundColor DarkGreen
-
-        foreach ($subdir in @("skills", "commands", "agents")) {
-            $srcDir = Join-Path $packOpencode $subdir
-            if (-not (Test-Path $srcDir)) { continue }
-
-            $dstDir = Join-Path $TargetOpencode $subdir
-            if (-not (Test-Path $dstDir)) {
-                New-Item -ItemType Directory -Path $dstDir -Force | Out-Null
+        foreach ($packName in $packsToInstall) {
+            $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
+            if (-not (Test-Path $packOpencode)) {
+                Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
+                continue
             }
 
-            foreach ($item in (Get-ChildItem -Path $srcDir -Directory)) {
-                $dstItem = Join-Path $dstDir $item.Name
-                if ((Test-Path $dstItem) -and -not $Force) {
-                    Write-Warning "  SKIP $subdir/$($item.Name) (exists, use -Force to overwrite)"
-                    $skipped++
-                    continue
+            Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
+
+            $packRoot = Join-Path $packsDir $packName
+
+            # --- Merge AGENTS.md ---
+            $agentsMd = Join-Path $packRoot "AGENTS.md"
+            if (Test-Path $agentsMd) {
+                $dstAgents = Join-Path $Target "AGENTS.md"
+                $result = Merge-AgentsMd $agentsMd $dstAgents $packName -ForceOverwrite:$Force
+                switch ($result) {
+                    "created"  { Write-Host "    + AGENTS.md (created)" -ForegroundColor DarkGreen; $installed++ }
+                    "merged"   { Write-Host "    + AGENTS.md (merged)" -ForegroundColor DarkGreen; $installed++ }
+                    "updated"  { Write-Host "    + AGENTS.md (updated)" -ForegroundColor DarkGreen; $installed++ }
+                    "exists"   { Write-Warning "    SKIP AGENTS.md (pack section exists, use -Force to update)"; $skipped++ }
                 }
-                if (Test-Path $dstItem) {
-                    Remove-Item -Path $dstItem -Recurse -Force
+
+                # Antigravity: also create/merge GEMINI.md
+                if ($cfg.GeminiMd) {
+                    $dstGemini = Join-Path $Target "GEMINI.md"
+                    $result = Merge-AgentsMd $agentsMd $dstGemini $packName -ForceOverwrite:$Force
+                    switch ($result) {
+                        "created"  { Write-Host "    + GEMINI.md (created)" -ForegroundColor DarkGreen; $installed++ }
+                        "merged"   { Write-Host "    + GEMINI.md (merged)" -ForegroundColor DarkGreen; $installed++ }
+                        "updated"  { Write-Host "    + GEMINI.md (updated)" -ForegroundColor DarkGreen; $installed++ }
+                        "exists"   { Write-Warning "    SKIP GEMINI.md (pack section exists, use -Force to update)"; $skipped++ }
+                    }
                 }
-                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                Write-Host "  + $subdir/$($item.Name)" -ForegroundColor DarkGreen
-                $installed++
+            }
+
+            # --- Merge opencode.json (OpenCode only) ---
+            if ($cfg.MergeJson) {
+                $ocExample = Join-Path $packRoot "opencode.example.json"
+                if (Test-Path $ocExample) {
+                    $dstOc = Join-Path $Target "opencode.json"
+                    $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$Force
+                    switch ($result) {
+                        "created" { Write-Host "    + opencode.json (created from example)" -ForegroundColor DarkGreen; $installed++ }
+                        "merged"  { Write-Host "    + opencode.json (merged)" -ForegroundColor DarkGreen; $installed++ }
+                    }
+                }
+            }
+
+            # --- Update installed-packs registry ---
+            $targetRegistry = Join-Path $Target $cfg.RegistryDir
+            $manifestFile = Join-Path $packRoot "pack-manifest.json"
+            Update-InstalledPacks $targetRegistry $packName $manifestFile
+            Write-Host "    + $($cfg.RegistryDir)/installed-packs.json (registry updated)" -ForegroundColor DarkGreen
+
+            # --- Copy skills ---
+            $srcSkills = Join-Path $packOpencode "skills"
+            if (Test-Path $srcSkills) {
+                $targetSkills = Join-Path $Target $cfg.SkillsDir
+                if (-not (Test-Path $targetSkills)) {
+                    New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
+                }
+                foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
+                    $dstItem = Join-Path $targetSkills $item.Name
+                    if ((Test-Path $dstItem) -and -not $Force) {
+                        Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
+                        $skipped++
+                        continue
+                    }
+                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                    Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
+                    $installed++
+                }
+            }
+
+            # --- Copy agents ---
+            $srcAgents = Join-Path $packOpencode "agents"
+            if (Test-Path $srcAgents) {
+                $targetAgents = Join-Path $Target $cfg.AgentsDir
+                if (-not (Test-Path $targetAgents)) {
+                    New-Item -ItemType Directory -Path $targetAgents -Force | Out-Null
+                }
+                foreach ($item in (Get-ChildItem -Path $srcAgents -Directory)) {
+                    $dstItem = Join-Path $targetAgents $item.Name
+                    if ((Test-Path $dstItem) -and -not $Force) {
+                        Write-Warning "    SKIP agents/$($item.Name) (exists, use -Force to overwrite)"
+                        $skipped++
+                        continue
+                    }
+                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                    Write-Host "    + agents/$($item.Name)" -ForegroundColor DarkGreen
+                    $installed++
+                }
+            }
+
+            # --- Copy commands ---
+            $srcCommands = Join-Path $packOpencode "commands"
+            if (Test-Path $srcCommands) {
+                $targetCommands = Join-Path $Target $cfg.CommandsDir
+                if (-not (Test-Path $targetCommands)) {
+                    New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
+                }
+                foreach ($item in (Get-ChildItem -Path $srcCommands -Directory)) {
+                    $dstItem = Join-Path $targetCommands $item.Name
+                    if ((Test-Path $dstItem) -and -not $Force) {
+                        Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
+                        $skipped++
+                        continue
+                    }
+                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                    Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
+                    $installed++
+                }
             }
         }
+
+        Write-Host "`n  [$platformName] Done: $installed installed, $skipped skipped." -ForegroundColor Cyan
     }
 
-    Write-Host "`nDone: $installed installed, $skipped skipped." -ForegroundColor Cyan
+    # --- Install for selected platform(s) ---
+    $platforms = if ($Platform -eq "all") { @("opencode", "antigravity") } else { @($Platform) }
+
+    foreach ($p in $platforms) {
+        Install-ForPlatform $p
+    }
 
 } finally {
     Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue

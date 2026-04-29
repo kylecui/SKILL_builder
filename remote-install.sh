@@ -4,8 +4,8 @@
 #
 # Usage (curl one-liner):
 #   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
-#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --target ~/my-project
-#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack testdocs --force
+#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack all --platform antigravity
+#   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack petfish --platform all
 #
 # For private repos, set GITHUB_TOKEN:
 #   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
@@ -94,19 +94,19 @@ with open(sys.argv[2], 'w') as f:
 }
 
 update_installed_packs() {
-    local target_opencode="$1" pack_name="$2" manifest_file="$3"
-    local reg_file="$target_opencode/installed-packs.json"
+    local registry_dir="$1" pack_name="$2" manifest_file="$3"
+    local reg_file="$registry_dir/installed-packs.json"
 
-    mkdir -p "$target_opencode"
+    mkdir -p "$registry_dir"
 
     python3 -c "
 import json, sys, os
 from datetime import datetime, timezone
 
-target_oc = sys.argv[1]
+registry_dir = sys.argv[1]
 pack_name = sys.argv[2]
 manifest_file = sys.argv[3]
-reg_file = os.path.join(target_oc, 'installed-packs.json')
+reg_file = os.path.join(registry_dir, 'installed-packs.json')
 
 entry = {'installed_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
 
@@ -127,7 +127,7 @@ reg['packs'][pack_name] = entry
 with open(reg_file, 'w') as f:
     json.dump(reg, f, indent=2, ensure_ascii=False)
     f.write('\n')
-" "$target_opencode" "$pack_name" "$manifest_file"
+" "$registry_dir" "$pack_name" "$manifest_file"
 }
 
 # --- Pack alias registry ---
@@ -143,32 +143,41 @@ ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-do
 # --- Defaults ---
 PACK=""
 TARGET="."
+PLATFORM="opencode"
 FORCE=false
 LIST=false
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --pack)   PACK="$2"; shift 2 ;;
-        --target) TARGET="$2"; shift 2 ;;
-        --force)  FORCE=true; shift ;;
-        --list)   LIST=true; shift ;;
-        --repo)   REPO="$2"; shift 2 ;;
-        --branch) BRANCH="$2"; shift 2 ;;
+        --pack)     PACK="$2"; shift 2 ;;
+        --target)   TARGET="$2"; shift 2 ;;
+        --platform) PLATFORM="$2"; shift 2 ;;
+        --force)    FORCE=true; shift ;;
+        --list)     LIST=true; shift ;;
+        --repo)     REPO="$2"; shift 2 ;;
+        --branch)   BRANCH="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--force]"
+            echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--force]"
             echo ""
             echo "Options:"
-            echo "  --pack <name|all>   Pack to install (course, testdocs, deploy, petfish, ppt, or all)"
-            echo "  --target <path>     Target project directory (default: .)"
-            echo "  --force             Overwrite existing skills"
-            echo "  --list              List available packs"
-            echo "  --repo <owner/repo> Override GitHub repo (default: $REPO)"
-            echo "  --branch <branch>   Override branch (default: $BRANCH)"
+            echo "  --pack <name|all>       Pack to install (course, testdocs, deploy, petfish, ppt, or all)"
+            echo "  --target <path>         Target project directory (default: .)"
+            echo "  --platform <platform>   Target platform: opencode, antigravity, or all (default: opencode)"
+            echo "  --force                 Overwrite existing skills"
+            echo "  --list                  List available packs"
+            echo "  --repo <owner/repo>     Override GitHub repo (default: $REPO)"
+            echo "  --branch <branch>       Override branch (default: $BRANCH)"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
+
+# Validate platform
+case "$PLATFORM" in
+    opencode|antigravity|all) ;;
+    *) echo "Error: --platform must be opencode, antigravity, or all" >&2; exit 1 ;;
+esac
 
 # --- List mode ---
 if $LIST; then
@@ -196,7 +205,6 @@ resolve_pack() {
     if [[ -n "${ALIASES[$name]+x}" ]]; then
         echo "${ALIASES[$name]}"
     else
-        # Check if it's already a full pack name
         for p in "${ALL_PACKS[@]}"; do
             if [[ "$p" == "$name" ]]; then
                 echo "$name"
@@ -217,7 +225,43 @@ fi
 # --- Resolve target ---
 mkdir -p "$TARGET"
 TARGET="$(cd "$TARGET" && pwd)"
-TARGET_OPENCODE="$TARGET/.opencode"
+
+# --- Platform path helpers ---
+get_skills_dir() {
+    case "$1" in
+        opencode)     echo ".opencode/skills" ;;
+        antigravity)  echo ".agents/skills" ;;
+    esac
+}
+
+get_agents_dir() {
+    case "$1" in
+        opencode)     echo ".opencode/agents" ;;
+        antigravity)  echo ".agents/rules" ;;
+    esac
+}
+
+get_commands_dir() {
+    case "$1" in
+        opencode)     echo ".opencode/commands" ;;
+        antigravity)  echo ".agents/workflows" ;;
+    esac
+}
+
+get_registry_dir() {
+    case "$1" in
+        opencode)     echo ".opencode" ;;
+        antigravity)  echo ".agents" ;;
+    esac
+}
+
+should_merge_json() {
+    [[ "$1" == "opencode" ]]
+}
+
+should_create_gemini() {
+    [[ "$1" == "antigravity" ]]
+}
 
 # --- Download tarball ---
 TMPDIR="$(mktemp -d)"
@@ -245,73 +289,157 @@ fi
 
 PACKS_DIR="$EXTRACT_DIR/packs"
 
-# --- Install ---
-installed=0
-skipped=0
+# --- Install function for a given platform ---
+install_for_platform() {
+    local platform_name="$1"
 
-for pack_name in "${PACKS[@]}"; do
-    pack_opencode="$PACKS_DIR/$pack_name/.opencode"
-    if [[ ! -d "$pack_opencode" ]]; then
-        echo "WARN: Pack '$pack_name' has no .opencode/ directory. Skipping."
-        continue
-    fi
+    local skills_dir
+    skills_dir="$(get_skills_dir "$platform_name")"
+    local agents_dir
+    agents_dir="$(get_agents_dir "$platform_name")"
+    local commands_dir
+    commands_dir="$(get_commands_dir "$platform_name")"
+    local registry_dir
+    registry_dir="$(get_registry_dir "$platform_name")"
 
     echo ""
-    echo "Installing pack: $pack_name"
+    echo "[$platform_name] Installing..."
 
-    pack_root="$PACKS_DIR/$pack_name"
+    local installed=0
+    local skipped=0
 
-    # --- Merge AGENTS.md ---
-    if [[ -f "$pack_root/AGENTS.md" ]]; then
-        dst_agents="$TARGET/AGENTS.md"
-        result="$(merge_agents_md "$pack_root/AGENTS.md" "$dst_agents" "$pack_name" "$FORCE")"
-        case "$result" in
-            created) echo "  + AGENTS.md (created)"; ((installed++)) || true ;;
-            merged)  echo "  + AGENTS.md (merged)";  ((installed++)) || true ;;
-            updated) echo "  + AGENTS.md (updated)"; ((installed++)) || true ;;
-            exists)  echo "  SKIP AGENTS.md (pack section exists, use --force to update)"; ((skipped++)) || true ;;
-        esac
-    fi
+    for pack_name in "${PACKS[@]}"; do
+        local pack_opencode="$PACKS_DIR/$pack_name/.opencode"
+        if [[ ! -d "$pack_opencode" ]]; then
+            echo "WARN: Pack '$pack_name' has no .opencode/ directory. Skipping."
+            continue
+        fi
 
-    # --- Merge opencode.json from opencode.example.json ---
-    if [[ -f "$pack_root/opencode.example.json" ]]; then
-        dst_oc="$TARGET/opencode.json"
-        result="$(merge_opencode_json "$pack_root/opencode.example.json" "$dst_oc" "$FORCE")"
-        case "$result" in
-            created) echo "  + opencode.json (created from example)"; ((installed++)) || true ;;
-            merged)  echo "  + opencode.json (merged)";              ((installed++)) || true ;;
-        esac
-    fi
+        echo ""
+        echo "  Installing pack: $pack_name"
 
-    # --- Update installed-packs registry ---
-    update_installed_packs "$TARGET_OPENCODE" "$pack_name" "$pack_root/pack-manifest.json"
-    echo "  + .opencode/installed-packs.json (registry updated)"
+        local pack_root="$PACKS_DIR/$pack_name"
 
-    for subdir in skills commands agents; do
-        src_dir="$pack_opencode/$subdir"
-        [[ -d "$src_dir" ]] || continue
+        # --- Merge AGENTS.md ---
+        if [[ -f "$pack_root/AGENTS.md" ]]; then
+            local dst_agents="$TARGET/AGENTS.md"
+            local result
+            result="$(merge_agents_md "$pack_root/AGENTS.md" "$dst_agents" "$pack_name" "$FORCE")"
+            case "$result" in
+                created) echo "    + AGENTS.md (created)"; ((installed++)) || true ;;
+                merged)  echo "    + AGENTS.md (merged)";  ((installed++)) || true ;;
+                updated) echo "    + AGENTS.md (updated)"; ((installed++)) || true ;;
+                exists)  echo "    SKIP AGENTS.md (pack section exists, use --force to update)"; ((skipped++)) || true ;;
+            esac
 
-        dst_dir="$TARGET_OPENCODE/$subdir"
-        mkdir -p "$dst_dir"
-
-        for item in "$src_dir"/*/; do
-            [[ -d "$item" ]] || continue
-            item_name="$(basename "$item")"
-            dst_item="$dst_dir/$item_name"
-
-            if [[ -d "$dst_item" ]] && ! $FORCE; then
-                echo "  SKIP $subdir/$item_name (exists, use --force to overwrite)"
-                ((skipped++)) || true
-                continue
+            # Antigravity: also create/merge GEMINI.md
+            if should_create_gemini "$platform_name"; then
+                local dst_gemini="$TARGET/GEMINI.md"
+                result="$(merge_agents_md "$pack_root/AGENTS.md" "$dst_gemini" "$pack_name" "$FORCE")"
+                case "$result" in
+                    created) echo "    + GEMINI.md (created)"; ((installed++)) || true ;;
+                    merged)  echo "    + GEMINI.md (merged)";  ((installed++)) || true ;;
+                    updated) echo "    + GEMINI.md (updated)"; ((installed++)) || true ;;
+                    exists)  echo "    SKIP GEMINI.md (pack section exists, use --force to update)"; ((skipped++)) || true ;;
+                esac
             fi
+        fi
 
-            [[ -d "$dst_item" ]] && rm -rf "$dst_item"
-            cp -r "$item" "$dst_item"
-            echo "  + $subdir/$item_name"
-            ((installed++)) || true
-        done
+        # --- Merge opencode.json (OpenCode only) ---
+        if should_merge_json "$platform_name"; then
+            if [[ -f "$pack_root/opencode.example.json" ]]; then
+                local dst_oc="$TARGET/opencode.json"
+                result="$(merge_opencode_json "$pack_root/opencode.example.json" "$dst_oc" "$FORCE")"
+                case "$result" in
+                    created) echo "    + opencode.json (created from example)"; ((installed++)) || true ;;
+                    merged)  echo "    + opencode.json (merged)";              ((installed++)) || true ;;
+                esac
+            fi
+        fi
+
+        # --- Update installed-packs registry ---
+        local target_registry="$TARGET/$registry_dir"
+        update_installed_packs "$target_registry" "$pack_name" "$pack_root/pack-manifest.json"
+        echo "    + $registry_dir/installed-packs.json (registry updated)"
+
+        # --- Copy skills ---
+        local src_skills="$pack_opencode/skills"
+        if [[ -d "$src_skills" ]]; then
+            local target_skills="$TARGET/$skills_dir"
+            mkdir -p "$target_skills"
+            for item in "$src_skills"/*/; do
+                [[ -d "$item" ]] || continue
+                local item_name
+                item_name="$(basename "$item")"
+                local dst_item="$target_skills/$item_name"
+
+                if [[ -d "$dst_item" ]] && ! $FORCE; then
+                    echo "    SKIP skills/$item_name (exists, use --force to overwrite)"
+                    ((skipped++)) || true
+                    continue
+                fi
+                [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+                cp -r "$item" "$dst_item"
+                echo "    + skills/$item_name"
+                ((installed++)) || true
+            done
+        fi
+
+        # --- Copy agents ---
+        local src_agents="$pack_opencode/agents"
+        if [[ -d "$src_agents" ]]; then
+            local target_agents="$TARGET/$agents_dir"
+            mkdir -p "$target_agents"
+            for item in "$src_agents"/*/; do
+                [[ -d "$item" ]] || continue
+                local item_name
+                item_name="$(basename "$item")"
+                local dst_item="$target_agents/$item_name"
+
+                if [[ -d "$dst_item" ]] && ! $FORCE; then
+                    echo "    SKIP agents/$item_name (exists, use --force to overwrite)"
+                    ((skipped++)) || true
+                    continue
+                fi
+                [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+                cp -r "$item" "$dst_item"
+                echo "    + agents/$item_name"
+                ((installed++)) || true
+            done
+        fi
+
+        # --- Copy commands ---
+        local src_commands="$pack_opencode/commands"
+        if [[ -d "$src_commands" ]]; then
+            local target_commands="$TARGET/$commands_dir"
+            mkdir -p "$target_commands"
+            for item in "$src_commands"/*/; do
+                [[ -d "$item" ]] || continue
+                local item_name
+                item_name="$(basename "$item")"
+                local dst_item="$target_commands/$item_name"
+
+                if [[ -d "$dst_item" ]] && ! $FORCE; then
+                    echo "    SKIP commands/$item_name (exists, use --force to overwrite)"
+                    ((skipped++)) || true
+                    continue
+                fi
+                [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+                cp -r "$item" "$dst_item"
+                echo "    + commands/$item_name"
+                ((installed++)) || true
+            done
+        fi
     done
-done
 
-echo ""
-echo "Done: $installed installed, $skipped skipped."
+    echo ""
+    echo "  [$platform_name] Done: $installed installed, $skipped skipped."
+}
+
+# --- Install for selected platform(s) ---
+if [[ "$PLATFORM" == "all" ]]; then
+    install_for_platform "opencode"
+    install_for_platform "antigravity"
+else
+    install_for_platform "$PLATFORM"
+fi
