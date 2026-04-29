@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 CJK = r"\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
+EN_TOKEN = r"[A-Za-z][A-Za-z0-9_.*+-]*"
 
 AI_FLAVOR_PATTERNS = [
     # From V3
@@ -82,11 +83,54 @@ def split_sentences(text: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
+def _is_code_or_heading(line: str) -> bool:
+    """Return True for lines that should be skipped in spacing checks."""
+    stripped = line.strip()
+    return stripped.startswith("```") or stripped.startswith("    ")
+
+
 def find_zh_en_spacing_issues(text: str) -> list[str]:
-    pattern1 = rf"[{CJK}]\s+[A-Za-z][A-Za-z0-9_./+-]*"
-    pattern2 = rf"[A-Za-z][A-Za-z0-9_./+-]*\s+[{CJK}]"
-    issues = re.findall(pattern1, text) + re.findall(pattern2, text)
+    """Find Chinese-English spacing violations including slash-separated terms."""
+    issues: list[str] = []
+
+    for line in text.split("\n"):
+        if _is_code_or_heading(line):
+            continue
+
+        # Pattern 1: CJK + space(s) + English token
+        issues.extend(re.findall(rf"[{CJK}]\s+{EN_TOKEN}", line))
+        # Pattern 2: English token + space(s) + CJK
+        issues.extend(re.findall(rf"{EN_TOKEN}\s+[{CJK}]", line))
+
     return sorted(set(issues))[:30]
+
+
+def find_slash_spacing_issues(text: str) -> list[str]:
+    """Find slash-separated term spacing violations.
+
+    Detects patterns like:
+      "API / CLI / SDK" (spaces around slashes between English tokens)
+      "根据 API / CLI" (CJK space before slash group)
+      "SDK / 配置文件" (slash group space before CJK)
+    """
+    issues: list[str] = []
+
+    for line in text.split("\n"):
+        if _is_code_or_heading(line):
+            continue
+
+        # Detect "EN space / space EN" patterns (spaced slashes between English tokens)
+        matches = re.findall(
+            rf"({EN_TOKEN}\s+/\s+{EN_TOKEN}(?:\s*/\s*{EN_TOKEN})*)",
+            line,
+        )
+        issues.extend(matches)
+
+        # Detect "/ space CJK" or "CJK space /" adjacent patterns
+        issues.extend(re.findall(rf"/\s+[{CJK}]", line))
+        issues.extend(re.findall(rf"[{CJK}]\s+/", line))
+
+    return sorted(set(issues))[:20]
 
 
 def check(text: str) -> dict:
@@ -94,7 +138,7 @@ def check(text: str) -> dict:
     long_sentences = [s for s in sentences if len(s) > 80]
     ai_terms = [p for p in AI_FLAVOR_PATTERNS if p in text]
     spacing_issues = find_zh_en_spacing_issues(text)
-    connector_count = sum(text.count(c) for c in LOGICAL_CONNECTORS)
+    slash_issues = find_slash_spacing_issues(text)
 
     paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     has_closure = False
@@ -114,10 +158,13 @@ def check(text: str) -> dict:
             ]
         )
 
+    connector_count = sum(text.count(c) for c in LOGICAL_CONNECTORS)
+
     score = 100
     score -= min(len(ai_terms) * 8, 32)
     score -= min(len(long_sentences) * 5, 25)
     score -= min(len(spacing_issues) * 4, 24)
+    score -= min(len(slash_issues) * 4, 16)
     if connector_count == 0 and len(sentences) >= 3:
         score -= 10
     if not has_closure and len(paragraphs) >= 2:
@@ -136,15 +183,21 @@ def check(text: str) -> dict:
             "ai_flavor_terms": ai_terms,
             "long_sentences": long_sentences[:10],
             "zh_en_spacing_issues": spacing_issues,
+            "slash_spacing_issues": slash_issues,
         },
         "recommendations": build_recommendations(
-            ai_terms, long_sentences, spacing_issues, connector_count, has_closure
+            ai_terms,
+            long_sentences,
+            spacing_issues,
+            slash_issues,
+            connector_count,
+            has_closure,
         ),
     }
 
 
 def build_recommendations(
-    ai_terms, long_sentences, spacing_issues, connector_count, has_closure
+    ai_terms, long_sentences, spacing_issues, slash_issues, connector_count, has_closure
 ):
     recs = []
     if ai_terms:
@@ -158,6 +211,10 @@ def build_recommendations(
     if spacing_issues:
         recs.append(
             "Remove unnecessary spaces between Chinese text and English technical terms, for example Git提交 instead of Git 提交."
+        )
+    if slash_issues:
+        recs.append(
+            "Remove spaces around slashes in slash-separated English terms adjacent to Chinese, for example API/CLI/SDK instead of API / CLI / SDK."
         )
     if connector_count == 0:
         recs.append(
@@ -194,18 +251,18 @@ def main() -> int:
         print(f"Score: {result['score']}/100")
         print("\nSummary:")
         for k, v in result["summary"].items():
-            print(f"- {k}: {v}")
+            print(f"  {k}: {v}")
         print("\nIssues:")
         for k, vals in result["issues"].items():
-            print(f"- {k}:")
+            print(f"  {k}:")
             if vals:
                 for item in vals:
-                    print(f"  - {item}")
+                    print(f"    - {item}")
             else:
-                print("  - none")
+                print("    (none)")
         print("\nRecommendations:")
         for r in result["recommendations"]:
-            print(f"- {r}")
+            print(f"  - {r}")
     return 0
 
 

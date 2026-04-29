@@ -18,43 +18,91 @@ from pathlib import Path
 
 CJK = r"\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff"
 
-# Common multi-token technical phrases that should stay compact in Petfish style.
-TECH_PHRASE_FIXES = {
-    "API 接口": "API接口",
-    "API 网关": "API网关",
-    "TCP 连接": "TCP连接",
-    "TLS 握手": "TLS握手",
-    "HTTP 请求": "HTTP请求",
-    "HTTPS 请求": "HTTPS请求",
-    "DNS 查询": "DNS查询",
-    "Git 提交": "Git提交",
-    "Git 分支": "Git分支",
-    "Git 仓库": "Git仓库",
-    "Webhook 挂载": "Webhook挂载",
-    "Issue 更新": "Issue更新",
-    "PR 合并": "PR合并",
-    "JSON 格式": "JSON格式",
-    "Markdown 文档": "Markdown文档",
-    "XDP 程序": "XDP程序",
-    "eBPF 映射": "eBPF映射",
-    "AF_XDP 队列": "AF_XDP队列",
-    "OpenCode 项目": "OpenCode项目",
-}
+# English token: letters/digits/underscore/hyphen/dot but NOT slash (slash handled separately)
+EN_TOKEN = r"[A-Za-z][A-Za-z0-9_.*+-]*"
+
+
+def normalize_slash_groups(text: str) -> str:
+    """Collapse spaced slash-separated English terms adjacent to Chinese.
+
+    Handles patterns like:
+      "根据 API / CLI / SDK / 配置文件生成文档"
+      → "根据API/CLI/SDK/配置文件生成文档"
+
+      "支持 HTTP / HTTPS / WebSocket 协议"
+      → "支持HTTP/HTTPS/WebSocket协议"
+
+      "通过 CI / CD 流水线部署"
+      → "通过CI/CD流水线部署"
+    """
+    # Step 1: Collapse "EN / EN / EN" → "EN/EN/EN" (remove spaces around slashes between English tokens)
+    # Use a broader token that includes already-collapsed slashes for iterative merging
+    EN_SLASH_TOKEN = rf"(?:{EN_TOKEN})(?:/{EN_TOKEN})*"
+    prev = None
+    while prev != text:
+        prev = text
+        text = re.sub(
+            rf"({EN_SLASH_TOKEN})\s*/\s*({EN_TOKEN})",
+            r"\1/\2",
+            text,
+        )
+
+    # Step 2: Collapse slash between EN-slash-group and CJK: "SDK / 配置文件" → "SDK/配置文件"
+    EN_SLASH_GROUP = rf"(?:{EN_TOKEN})(?:/{EN_TOKEN})*"
+    text = re.sub(
+        rf"({EN_SLASH_GROUP})\s*/\s*([{CJK}])",
+        r"\1/\2",
+        text,
+    )
+    # And CJK / EN: "配置文件 / API" → "配置文件/API"
+    text = re.sub(
+        rf"([{CJK}])\s*/\s*({EN_SLASH_GROUP})",
+        r"\1/\2",
+        text,
+    )
+
+    # Step 3: Remove space between CJK and adjacent EN/slash-group, and vice versa
+    # CJK + space(s) + EN-slash-group
+    text = re.sub(
+        rf"([{CJK}])\s+((?:{EN_TOKEN})(?:/{EN_TOKEN})*)",
+        r"\1\2",
+        text,
+    )
+    # EN-slash-group + space(s) + CJK
+    text = re.sub(
+        rf"((?:{EN_TOKEN})(?:/{EN_TOKEN})*)\s+([{CJK}])",
+        r"\1\2",
+        text,
+    )
+    return text
 
 
 def normalize_zh_en_spacing(text: str) -> str:
     """Remove unnecessary spaces between Chinese and English technical terms."""
-    for src, dst in TECH_PHRASE_FIXES.items():
-        text = text.replace(src, dst)
+    # Process line by line to preserve markdown structure
+    lines = text.split("\n")
+    result_lines = []
+    for line in lines:
+        # Skip code blocks and markdown headings with only English
+        stripped = line.strip()
+        if stripped.startswith("```") or stripped.startswith("    "):
+            result_lines.append(line)
+            continue
 
-    # Chinese + spaces + ASCII technical token -> compact
-    text = re.sub(rf"([{CJK}])\s+([A-Za-z][A-Za-z0-9_./+-]*)", r"\1\2", text)
-    # ASCII technical token + spaces + Chinese -> compact
-    text = re.sub(rf"([A-Za-z][A-Za-z0-9_./+-]*)\s+([{CJK}])", r"\1\2", text)
-    # Chinese + spaces + number + common unit/percent -> compact
-    text = re.sub(rf"([{CJK}])\s+(\d+(?:\.\d+)?%?)", r"\1\2", text)
-    text = re.sub(rf"(\d+(?:\.\d+)?)\s+([{CJK}])", r"\1\2", text)
-    return text
+        # Apply slash group normalization first (before general CJK-EN rules)
+        line = normalize_slash_groups(line)
+
+        # General: Chinese + spaces + English token → compact
+        line = re.sub(rf"([{CJK}])\s+({EN_TOKEN})", r"\1\2", line)
+        # General: English token + spaces + Chinese → compact
+        line = re.sub(rf"({EN_TOKEN})\s+([{CJK}])", r"\1\2", line)
+        # Chinese + spaces + number + common unit/percent → compact
+        line = re.sub(rf"([{CJK}])\s+(\d+(?:\.\d+)?%?)", r"\1\2", line)
+        line = re.sub(rf"(\d+(?:\.\d+)?)\s+([{CJK}])", r"\1\2", line)
+
+        result_lines.append(line)
+
+    return "\n".join(result_lines)
 
 
 def normalize_punctuation(text: str) -> str:
