@@ -1,17 +1,5 @@
-<#
-.SYNOPSIS
-    Remote installer for OpenCode skill packs from GitHub. No clone needed.
-
-.DESCRIPTION
-    Downloads the repo tarball, extracts the requested pack, and copies
-    skills, commands, agents into the target project.
-    Supports OpenCode and Antigravity platforms.
-
-.EXAMPLE
-    # One-liner:
-    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack course -Target .
-    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform antigravity
-#>
+# Remote installer for OpenCode/Antigravity skill packs from GitHub. No clone needed.
+# Usage: & ([scriptblock]::Create((irm <url>))) -Pack course [-Platform opencode|antigravity|all] [-Target .]
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Pack,
