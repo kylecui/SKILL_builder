@@ -136,8 +136,9 @@ declare -A ALIASES=(
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
     [deploy]="repo-deploy-ops-skill-pack"
     [petfish]="petfish-style-skill"
+    [ppt]="opencode-ppt-skills"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "opencode-ppt-skills")
 
 # --- Defaults ---
 PACK=""
@@ -158,7 +159,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--force]"
             echo ""
             echo "Options:"
-            echo "  --pack <name|all>   Pack to install (course, testdocs, deploy, petfish, or all)"
+            echo "  --pack <name|all>   Pack to install (course, testdocs, deploy, petfish, ppt, or all)"
             echo "  --target <path>     Target project directory (default: .)"
             echo "  --force             Overwrite existing skills"
             echo "  --list              List available packs"
@@ -178,6 +179,7 @@ if $LIST; then
     echo "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
     echo "  repo-deploy-ops-skill-pack (alias: deploy)"
     echo "  petfish-style-skill (alias: petfish)"
+    echo "  opencode-ppt-skills (alias: ppt)"
     echo ""
     exit 0
 fi
@@ -201,7 +203,7 @@ resolve_pack() {
                 return
             fi
         done
-        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, all" >&2
+        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, ppt, all" >&2
         exit 1
     fi
 }

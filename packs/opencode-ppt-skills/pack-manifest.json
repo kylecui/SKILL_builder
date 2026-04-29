@@ -1,0 +1,12 @@
+{
+  "name": "opencode-ppt-skills",
+  "version": "1.0.0",
+  "description": "OpenCode skills for reading and writing PowerPoint/PPTX decks.",
+  "skills": [
+    ".opencode/skills/ppt-reader",
+    ".opencode/skills/ppt-writer"
+  ],
+  "requires": ["uv"],
+  "optional_requires": ["LibreOffice", "Poppler", "Node.js", "PptxGenJS"],
+  "license": "MIT"
+}

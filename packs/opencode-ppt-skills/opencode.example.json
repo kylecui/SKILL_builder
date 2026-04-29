@@ -1,0 +1,8 @@
+{
+  "permission": {
+    "skill": {
+      "ppt-reader": "allow",
+      "ppt-writer": "allow"
+    }
+  }
+}

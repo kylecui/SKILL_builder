@@ -10,6 +10,7 @@ OpenCode skill packs — build, maintain, and install custom skills into any pro
 | `testdocs` | opencode-skill-pack-testcases-usage-docs | 2 | 0 | 0 |
 | `deploy` | repo-deploy-ops-skill-pack | 7 | 0 | 0 |
 | `petfish` | petfish-style-skill | 1 | 0 | 0 |
+| `ppt` | opencode-ppt-skills | 2 | 0 | 0 |
 
 ## Install
 
@@ -93,6 +94,11 @@ SKILL_builder/
 │       ├── .opencode/
 │       │   └── skills/       (1 skill)
 │       ├── AGENTS.md
+│       └── opencode.example.json
+│   └── opencode-ppt-skills/
+│       ├── .opencode/
+│       │   └── skills/       (2 skills)
+│       ├── pack-manifest.json
 │       └── opencode.example.json
 ├── install.ps1
 ├── install.sh

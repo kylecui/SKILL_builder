@@ -136,6 +136,7 @@ declare -A ALIASES=(
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
     [deploy]="repo-deploy-ops-skill-pack"
     [petfish]="petfish-style-skill"
+    [ppt]="opencode-ppt-skills"
 )
 
 # --- Defaults ---
@@ -153,7 +154,7 @@ while [[ $# -gt 0 ]]; do
         --list)   LIST=true; shift ;;
         -h|--help)
             echo "Usage: $0 --pack <name|all> [--target <path>] [--force] [--list]"
-            echo "Aliases: course, testdocs, deploy, petfish"
+            echo "Aliases: course, testdocs, deploy, petfish, ppt"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac

@@ -8,7 +8,7 @@
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs, deploy, petfish
+    Aliases: course, testdocs, deploy, petfish, ppt
     Full names also accepted.
 
 .PARAMETER Target
@@ -45,6 +45,7 @@ $Aliases = @{
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
     "petfish"  = "petfish-style-skill"
+    "ppt"      = "opencode-ppt-skills"
 }
 
 # --- Merge helpers ---
