@@ -76,6 +76,45 @@ curl -fsSL -H "Authorization: token $GITHUB_TOKEN" \
 ./install.sh --list
 ```
 
+## Antigravity Quick Start (Windows)
+
+Install all skill packs for Antigravity:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform antigravity
+```
+
+Install a single pack:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack petfish -Platform antigravity
+```
+
+Specify target project and force overwrite:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform antigravity -Target C:\path\to\project -Force
+```
+
+Install for both OpenCode and Antigravity simultaneously:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack all -Platform all
+```
+
+After installation, the target project will have:
+
+```
+your-project/
+├── .agents/
+│   ├── skills/                ← Skill files (SKILL.md format, identical to OpenCode)
+│   ├── rules/                 ← Agent rules (maps from .opencode/agents/)
+│   ├── workflows/             ← Workflows (maps from .opencode/commands/)
+│   └── installed-packs.json   ← Install registry
+├── AGENTS.md                  ← Project instructions (marker-based merge)
+└── GEMINI.md                  ← Copy of AGENTS.md (Antigravity-specific)
+```
+
 ## Adding a New Pack
 
 1. Create a directory under `packs/` with your pack name
