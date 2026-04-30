@@ -8,7 +8,7 @@ Supports both **OpenCode** and **Google Antigravity** platforms.
 
 | Alias | Pack | Skills | Commands | Agents | Default Install |
 |-------|------|--------|----------|--------|----------------|
-| `init` | project-initializer-skill | 1 | 0 | 0 | **Global** |
+| `init` | project-initializer-skill | 1 | 1 | 0 | **Global** |
 | `course` | opencode-course-skills-pack | 15 | 10 | 8 | Project |
 | `testdocs` | opencode-skill-pack-testcases-usage-docs | 2 | 0 | 0 | Project |
 | `deploy` | repo-deploy-ops-skill-pack | 7 | 0 | 0 | Project |
