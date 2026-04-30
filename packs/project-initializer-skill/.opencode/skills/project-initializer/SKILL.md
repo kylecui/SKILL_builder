@@ -39,6 +39,15 @@ Do not use this skill for ordinary one-off file editing unrelated to project ini
 7. Treat security research projects as authorized, isolated, defensive research unless the user explicitly establishes lawful scope.
 8. Produce an initialization report for every executed initialization.
 
+## Language Adaptation
+
+Detect the user's language from their messages:
+- If the user writes in Chinese → respond in Chinese, use Chinese prompts in wizard
+- If the user writes in English → respond in English, use English prompts in wizard
+- If mixed → match the dominant language of the most recent message
+
+All wizard prompts below are provided in both languages. Use the appropriate version based on detected language. Do NOT mix languages within a single prompt block.
+
 ## Progressive Workflow
 
 ### 1. Clarify Intent
@@ -326,7 +335,9 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 
 After the completion report (section 10) and skill pack installation (section 11), enter wizard mode to guide the user through remaining setup. Present each step as a numbered choice. The user can complete it interactively or say "稍后再说"/"skip" to defer.
 
-**Wizard Entry Prompt** (show this to the user):
+**Wizard Entry Prompt** (choose based on detected language):
+
+Chinese version:
 
 ```
 📋 项目骨架已就绪。接下来我可以引导你完成以下配置，每一步都可以选择「稍后再说」：
@@ -341,28 +352,43 @@ After the completion report (section 10) and skill pack installation (section 11
 从哪一步开始？（输入编号，或「全部跳过」）
 ```
 
+English version:
+
+```
+📋 Project scaffold is ready. I can guide you through the remaining setup. Each step can be skipped:
+
+1️⃣  AGENTS.md — Define project goals, constraints, and collaboration rules
+2️⃣  README.md — Write project description and core features
+3️⃣  Task Planning — Add first 3 actionable tasks to tasks/backlog.md
+4️⃣  Git Init — git init + initial commit
+5️⃣  Python Dev Environment — uv init + install dev dependencies
+6️⃣  MCP Config — Connect external services
+
+Which step to start with? (Enter a number, or "skip all")
+```
+
 #### Step 1: AGENTS.md
 
-Ask the user:
-- "这个项目的一句话目标是什么？"
-- "有哪些硬性约束？（如技术栈、安全要求、不可触碰的文件）"
-- "AI agent的协作边界是什么？（如：可以自由创建测试文件，但不可修改deploy配置）"
+Ask the user (Chinese / English):
+- "这个项目的一句话目标是什么？" / "What is the one-line goal of this project?"
+- "有哪些硬性约束？（如技术栈、安全要求、不可触碰的文件）" / "Any hard constraints? (tech stack, security requirements, untouchable files)"
+- "AI agent的协作边界是什么？（如：可以自由创建测试文件，但不可修改deploy配置）" / "What are the AI agent collaboration boundaries? (e.g. free to create test files, but must not modify deploy configs)"
 
-Based on answers, fill in the AGENTS.md placeholders. If the user says "稍后再说", leave the existing template unchanged.
+Based on answers, fill in the AGENTS.md placeholders. If the user says "稍后再说" or "skip", leave the existing template unchanged.
 
 #### Step 2: README.md
 
-Ask the user:
-- "用一句话描述这个项目的用途"
-- "核心功能有哪些？（列举2-5个）"
-- "目标用户是谁？"
+Ask the user (Chinese / English):
+- "用一句话描述这个项目的用途" / "Describe this project in one sentence"
+- "核心功能有哪些？（列举2-5个）" / "What are the core features? (list 2-5)"
+- "目标用户是谁？" / "Who is the target audience?"
 
 Based on answers, replace README.md placeholders with real content. If skipped, leave the template.
 
 #### Step 3: Task Backlog
 
-Ask the user:
-- "项目的前3个可执行任务是什么？（可以简单描述）"
+Ask the user (Chinese / English):
+- "项目的前3个可执行任务是什么？（可以简单描述）" / "What are the first 3 actionable tasks? (brief descriptions are fine)"
 
 Write tasks into `tasks/backlog.md` in the format:
 
@@ -380,7 +406,7 @@ If skipped, leave the file empty or with a single placeholder task.
 
 #### Step 4: Git Init
 
-Ask: "要现在初始化Git仓库吗？(y/n)"
+Ask (Chinese / English): "要现在初始化Git仓库吗？(y/n)" / "Initialize a Git repo now? (y/n)"
 
 If yes, execute:
 
@@ -392,11 +418,11 @@ If skipped, remind the user to do it later.
 
 #### Step 5: Python Development Environment
 
-Ask: "项目需要Python开发环境吗？(y/n)"
+Ask (Chinese / English): "项目需要Python开发环境吗？(y/n)" / "Does this project need a Python dev environment? (y/n)"
 
 If yes:
 1. Check if `uv` is available. If not, show install URL: https://docs.astral.sh/uv/getting-started/installation/
-2. Ask: "需要哪些开发依赖？（默认：pytest, ruff, mypy）"
+2. Ask (Chinese / English): "需要哪些开发依赖？（默认：pytest, ruff, mypy）" / "Which dev dependencies? (default: pytest, ruff, mypy)"
 3. Execute:
 
 ```bash
@@ -407,13 +433,15 @@ If skipped, no action.
 
 #### Step 6: MCP Configuration
 
-Ask: "需要连接哪些外部MCP服务？（如filesystem, database, API等）"
+Ask (Chinese / English): "需要连接哪些外部MCP服务？（如filesystem, database, API等）" / "Which external MCP services to connect? (e.g. filesystem, database, API)"
 
 If the user provides services, update `mcp/mcp-config.example.json` with appropriate placeholders. If skipped, leave the example file unchanged.
 
 #### Wizard Completion
 
-After all steps (completed or skipped), show:
+After all steps (completed or skipped), show the appropriate version:
+
+Chinese:
 
 ```
 ✅ 项目初始化向导完成！
@@ -422,6 +450,17 @@ After all steps (completed or skipped), show:
 已跳过：[list skipped steps]（随时可以手动完成）
 
 💡 提示：刚才安装的技能包已经可以立即使用，无需重启。你可以直接在对话中调用它们。
+```
+
+English:
+
+```
+✅ Project initialization wizard complete!
+
+Completed: [list completed steps]
+Skipped: [list skipped steps] (you can do these manually anytime)
+
+💡 Tip: The skill packs installed just now are ready to use immediately — no restart needed. You can invoke them directly in this conversation.
 ```
 
 If any steps were skipped, briefly list the manual commands the user can run later.
