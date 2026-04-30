@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    Install OpenCode skill packs into a target project.
+    petfish - Install OpenCode/Antigravity skill packs.
 
 .DESCRIPTION
     Copies skills, commands, and agents from one or more skill packs
-    into the target project. Supports OpenCode and Antigravity platforms.
+    into the target project or global skills directories. Supports OpenCode and Antigravity platforms.
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs, deploy, petfish, ppt
+    Aliases: course, testdocs, deploy, init, petfish, ppt
     Full names also accepted.
 
 .PARAMETER Target
@@ -23,10 +23,14 @@
 .PARAMETER List
     List available packs and exit.
 
+.PARAMETER Global
+    Install skills into the platform's global skills directory instead of a target project.
+
 .EXAMPLE
     .\install.ps1 -Pack course -Target C:\my-project
     .\install.ps1 -Pack all -Platform antigravity
     .\install.ps1 -Pack petfish -Platform all
+    .\install.ps1 -Pack init -Global
     .\install.ps1 -List
 #>
 [CmdletBinding()]
@@ -35,11 +39,27 @@ param(
     [string]$Target = ".",
     [ValidateSet("opencode", "antigravity", "all")]
     [string]$Platform = "opencode",
+    [switch]$Global,
     [switch]$Force,
     [switch]$List
 )
 
 $ErrorActionPreference = "Stop"
+
+# --- uv availability check ---
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Warning "[petfish] uv not found. Some skill packs require uv to run Python scripts."
+    Write-Warning "         Install: https://docs.astral.sh/uv/getting-started/installation/"
+}
+
+if (-not $List) {
+    Write-Host ""
+    Write-Host "  [petfish] Skill Pack Installer" -ForegroundColor Cyan
+    Write-Host ""
+}
+
+$GlobalExplicitlyPassed = $PSBoundParameters.ContainsKey("Global")
+$TargetExplicitlyPassed = $PSBoundParameters.ContainsKey("Target")
 
 # Resolve script root (works whether run directly or piped)
 $ScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
@@ -50,6 +70,7 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
+    "init"     = "project-initializer-skill"
     "petfish"  = "petfish-style-skill"
     "ppt"      = "opencode-ppt-skills"
 }
@@ -76,6 +97,21 @@ function Get-PlatformConfig([string]$platformName) {
                 RegistryDir = ".agents"
                 MergeJson   = $false
                 GeminiMd    = $true
+            }
+        }
+    }
+}
+
+function Get-GlobalPlatformConfig([string]$platformName) {
+    switch ($platformName) {
+        "opencode" {
+            return @{
+                SkillsDir = Join-Path $HOME ".config/opencode/skills"
+            }
+        }
+        "antigravity" {
+            return @{
+                SkillsDir = Join-Path $HOME ".gemini/antigravity/skills"
             }
         }
     }
@@ -343,6 +379,52 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
     Write-Host "`n  [$platformName] Done: $($script:installed) installed, $($script:skipped) skipped." -ForegroundColor Cyan
 }
 
+function Install-GlobalForPlatform([string]$platformName, [string[]]$packs, [switch]$ForceInstall) {
+    $cfg = Get-GlobalPlatformConfig $platformName
+    $targetSkills = $cfg.SkillsDir
+
+    if (-not (Test-Path $targetSkills)) {
+        New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
+    }
+
+    Write-Host "`n[$platformName] Global installing..." -ForegroundColor Magenta
+    Write-Host "  Global skills dir: $targetSkills" -ForegroundColor DarkCyan
+
+    $script:installed = 0
+    $script:skipped = 0
+
+    foreach ($packName in $packs) {
+        $packOpencode = Join-Path (Join-Path $PacksDir $packName) ".opencode"
+        if (-not (Test-Path $packOpencode)) {
+            Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
+            continue
+        }
+
+        Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
+
+        $srcSkills = Join-Path $packOpencode "skills"
+        if (-not (Test-Path $srcSkills)) {
+            Write-Warning "Pack '$packName' has no .opencode/skills/ directory. Skipping."
+            continue
+        }
+
+        foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
+            $dstItem = Join-Path $targetSkills $item.Name
+            if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
+                $script:skipped++
+                continue
+            }
+            if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+            Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+            Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
+            $script:installed++
+        }
+    }
+
+    Write-Host "`n  [$platformName] Done: $($script:installed) installed, $($script:skipped) skipped." -ForegroundColor Cyan
+}
+
 # --- List mode ---
 if ($List) {
     Show-PackList
@@ -354,9 +436,6 @@ if (-not $Pack) {
     exit 1
 }
 
-# --- Resolve target ---
-$Target = Resolve-Path $Target -ErrorAction Stop
-
 # --- Resolve packs to install ---
 $packsToInstall = if ($Pack -eq "all") {
     Get-AllPacks
@@ -364,9 +443,23 @@ $packsToInstall = if ($Pack -eq "all") {
     @(Get-PackFullName $Pack)
 }
 
+if (($Pack -eq "init" -or $Pack -eq "project-initializer-skill") -and -not $GlobalExplicitlyPassed -and -not $TargetExplicitlyPassed) {
+    $Global = $true
+    Write-Host "  [info] init pack defaults to global install. Use -Target to install locally." -ForegroundColor DarkCyan
+}
+
+# --- Resolve target ---
+if (-not $Global) {
+    $Target = (Resolve-Path $Target -ErrorAction Stop).Path
+}
+
 # --- Install for selected platform(s) ---
 $platforms = if ($Platform -eq "all") { @("opencode", "antigravity") } else { @($Platform) }
 
 foreach ($p in $platforms) {
-    Install-ForPlatform $p $packsToInstall $Target -ForceInstall:$Force
+    if ($Global) {
+        Install-GlobalForPlatform $p $packsToInstall -ForceInstall:$Force
+    } else {
+        Install-ForPlatform $p $packsToInstall $Target -ForceInstall:$Force
+    }
 }

@@ -1,0 +1,315 @@
+---
+name: project-initializer
+description: Use this skill when a user wants to initialize, scaffold, bootstrap, or standardize a new AI-agent-friendly project workspace, including OpenCode project skills, AGENTS.md, README, QA files, MCP templates, uv/Python development setup, course projects, code projects, ops projects, security research projects, writing projects, skills packages, or comprehensive mixed projects. This skill is for safe project initialization and must not silently overwrite existing files.
+license: Proprietary. Adapt for internal use.
+compatibility: Designed for OpenCode project-level skills. Optional script requires Python 3.10+; uv is recommended for Python development projects.
+metadata:
+  version: "1.0.0"
+  author: "Kyle Cui / ChatGPT"
+  workflow: "safe-project-initialization"
+---
+
+# Project Initializer Skill
+
+## Purpose
+
+You are a project initialization assistant. Your job is to turn a user's project idea into a safe, auditable, AI-agent-friendly workspace.
+
+You do not merely create directories. You guide the user through intent clarification, directory safety checks, initialization planning, file generation, optional skills/MCP setup, optional development environment setup, and a final initialization report.
+
+## Activation Scope
+
+Use this skill for requests such as:
+
+- Initialize a project, repo, workspace, OpenCode project, AI-assisted project, or skill package.
+- Generate `AGENTS.md`, `.opencode/skills`, project templates, QA templates, task plans, or MCP configuration examples.
+- Set up a course, code, ops, security research, writing, skills-package, comprehensive, or minimal project.
+- Prepare a project for long-term collaboration between human maintainers and AI agents.
+
+Do not use this skill for ordinary one-off file editing unrelated to project initialization.
+
+## Core Rules
+
+1. Never delete user files.
+2. Never silently overwrite existing files.
+3. Never initialize inside dangerous roots such as `/`, `C:\`, a user home root, system directories, or package manager/system configuration directories.
+4. Never write real API keys, tokens, passwords, SSH keys, or private keys into generated files.
+5. Ask for explicit confirmation before shell execution, network download, file overwrite, development environment creation, or modification of an existing `AGENTS.md`.
+6. In non-empty directories, default to `--no-overwrite` behavior and generate `.new` or skip conflicted files.
+7. Treat security research projects as authorized, isolated, defensive research unless the user explicitly establishes lawful scope.
+8. Produce an initialization report for every executed initialization.
+
+## Progressive Workflow
+
+### 1. Clarify Intent
+
+If the user has already described enough context, infer the project profile and summarize it instead of asking again.
+
+Ask no more than five questions at once. Prefer these:
+
+1. What is the project mainly for: course, code, ops, security research, writing, skills package, comprehensive, or minimal?
+2. Which directory should be initialized? Use the current directory if unspecified.
+3. May I create `AGENTS.md`, `README.md`, `.opencode/`, `docs/`, `tasks/`, `qa/`, and related files without overwriting existing files?
+4. Is a development environment needed, such as Python `uv`, `pytest`, `ruff`, `mypy`, Node, or frontend tooling?
+5. Should I create MCP templates or install/copy skills from a local or remote repository?
+
+### 2. Infer Project Profile
+
+Produce a short profile before execution:
+
+```text
+Project name:
+Project type:
+Target directory:
+Overwrite policy:
+Network download:
+Shell execution:
+Development environment:
+MCP templates:
+Skills source:
+Risk operations:
+Recommended initialization plan:
+```
+
+Supported profiles:
+
+- `minimal`
+- `course`
+- `code`
+- `ops`
+- `security-research`
+- `writing`
+- `skills-package`
+- `comprehensive`
+
+If multiple substantial intents are present, use `comprehensive` and tailor the directories. Do not create unnecessary empty modules.
+
+### 3. Directory Safety Check
+
+Before writing anything, inspect the target directory.
+
+Reject dangerous paths. Warn on non-empty directories. Report conflicts for:
+
+- `AGENTS.md`
+- `.opencode/`
+- `README.md`
+- `pyproject.toml`
+- `package.json`
+- existing `src/`, `tests/`, `docs/`, `qa/`, `mcp/`, `skills/`
+- `.git/`
+
+For a non-empty directory, show:
+
+```text
+Target directory is not empty.
+Existing important items:
+- ...
+Potential conflicts:
+- ...
+Default strategy:
+- create missing files and directories only
+- skip existing files, or generate .new versions
+- do not overwrite unless explicitly confirmed
+```
+
+### 4. Plan Before Execution
+
+Generate a tree preview and action list before changes:
+
+- directories to create
+- files to create
+- files to skip or generate as `.new`
+- skills to install or recommend
+- MCP templates to generate
+- development commands to run or document
+- risks and required confirmations
+
+For shell commands, network downloads, or overwrites, stop and ask for confirmation.
+
+### 5. Execute Deterministically
+
+Use `tools/init_project.py` when possible. It supports dry-run, no-overwrite behavior, profile-based scaffolding, MCP templates, uv setup instructions, and initialization reports.
+
+Typical safe commands:
+
+```bash
+uv run python tools/init_project.py --profile comprehensive --target . --with-opencode --with-mcp-template --no-overwrite --dry-run
+uv run python tools/init_project.py --profile comprehensive --target . --with-opencode --with-mcp-template --no-overwrite
+```
+
+For Python development projects, prefer documenting commands unless the user confirms execution:
+
+```bash
+uv init
+uv add --dev pytest ruff mypy pre-commit
+uv run pytest
+uv run ruff check .
+```
+
+### 6. Generate Core Files
+
+Every profile should include at least:
+
+- `AGENTS.md` or `AGENTS.md.new` when conflicting
+- `README.md` or `README.md.new`
+- task plan or roadmap
+- QA checklist
+- initialization report
+
+`AGENTS.md` must include:
+
+- project goal
+- project type
+- working principles
+- directory map
+- preferred tools
+- skills
+- MCP suggestions
+- quality gates
+- explicit prohibitions
+
+### 7. Profile-Specific Requirements
+
+#### Course
+
+Include `course/`, `lesson-design/`, `slides/`, `labs/`, `student-materials/`, `teacher-guide/`, and `assessments/`.
+
+The agent guide must enforce:
+
+`厘清概念 → 举例实践 → 推理分析 → 自己动手 → 反馈提升`
+
+Avoid solution dumping, AIGC-style empty prose, missing teaching progression, tool-only teaching, and concept-only teaching without labs.
+
+#### Code
+
+Include `src/`, `tests/`, `scripts/`, `docs/architecture.md`, `docs/api.md`, `docs/development.md`, `examples/`, `configs/`, and code QA files.
+
+For Python, prefer `uv`, `pytest`, `ruff`, optional `mypy`, optional `pre-commit`.
+
+#### Ops
+
+Include `deploy/`, `configs/`, `scripts/`, `runbooks/`, `monitoring/`, `logs/`, `evidence/`, and deployment QA.
+
+Emphasize repeatable deployment, rollback, observability, auditability, least privilege, and separation of config and secrets.
+
+#### Security Research
+
+Include `threat-model/`, `experiments/`, `datasets/`, `evidence/`, `scripts/`, `reports/`, and research QA.
+
+Emphasize lawful authorization, lab isolation, evidence retention, reproducibility, and no unauthorized offensive operations.
+
+#### Writing
+
+Include `drafts/`, `outlines/`, `references/`, `figures/`, `reviews/`, `exports/`, and writing QA.
+
+Emphasize clear structure, 总分总 narration, term consistency, evidence retention, citations, and reviewable outputs.
+
+#### Skills Package
+
+Include `.opencode/skills/`, `skills/`, `mcp/`, `docs/skill-design-guide.md`, `docs/threat-model.md`, `tests/`, and skill security QA.
+
+Emphasize clear skill boundaries, explicit inputs and outputs, no hidden execution, no unauthorized network access, no unrelated file reads, and no sensitive data leakage.
+
+#### Comprehensive
+
+Combine modules only when relevant. For the user's likely OpenCode workflow, include at minimum `.opencode/`, `course/`, `src/`, `tests/`, `deploy/`, `ops/`, `docs/`, `references/`, `experiments/`, `outputs/`, and `qa/`.
+
+### 8. Skills Installation
+
+If a skills repository is specified:
+
+1. Ask before network download.
+2. Download to a temporary directory.
+3. Copy only requested or recommended skills.
+4. Do not overwrite existing skills.
+5. Record provenance in `.opencode/skills/manifest.md`.
+
+Manifest format:
+
+```markdown
+# Skills Manifest
+
+| Skill | Source | Branch | Installed At | Purpose | Notes |
+|---|---|---|---|---|---|
+```
+
+If download fails or is not authorized, generate manual installation instructions.
+
+### 9. MCP Configuration
+
+If MCP is requested, generate:
+
+```text
+mcp/
+├── README.md
+├── mcp-config.example.json
+└── connection-checklist.md
+```
+
+Use placeholders only:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "<PROJECT_DIR>"]
+    },
+    "custom-threat-intel": {
+      "command": "python",
+      "args": ["<PATH_TO_SERVER>/run_server.py"],
+      "env": {"THREATBOOK_API_KEY": "<YOUR_API_KEY>"}
+    }
+  }
+}
+```
+
+### 10. Completion Report
+
+After execution, produce:
+
+```markdown
+# Initialization Report
+
+## Summary
+## Project Profile
+## Created Directories
+## Created Files
+## Skipped Files
+## Conflicts
+## Skills Installed
+## MCP Templates Generated
+## Development Environment
+## Risks and Warnings
+## Recommended Next Steps
+```
+
+In chat, summarize briefly and mention that no existing files were overwritten unless explicitly confirmed.
+
+## Available Files
+
+- `tools/init_project.py` — deterministic initializer script.
+- `profiles/*.yaml` — profile definitions.
+- `templates/*.j2` — generated file templates.
+- `references/IMPLEMENTATION.md` — implementation notes and extension points.
+- `evals/evals.json` — starter eval cases for this skill.
+
+## Fast Paths
+
+If the user says “按默认初始化”:
+
+- profile: `minimal`
+- target: current directory
+- overwrite: no
+- dev environment: no
+- MCP: template only if requested
+- skills: create empty manifest
+
+If the user says “按综合项目初始化”:
+
+- profile: `comprehensive`
+- target: current directory
+- overwrite: no
+- dev environment: ask about `uv`
+- MCP: generate templates
+- skills: create recommended skills directories and manifest

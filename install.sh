@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 #
-# Install OpenCode skill packs into a target project.
+# Install petfish skill packs into a target project or global skills directory.
 #
 # Usage:
 #   ./install.sh --pack course --target ~/my-project
 #   ./install.sh --pack all --platform antigravity
 #   ./install.sh --pack petfish --platform all
+#   ./install.sh --pack init --global
 #   ./install.sh --list
 #   ./install.sh --pack testdocs --force
 #
 set -euo pipefail
+
+# --- uv availability check ---
+if ! command -v uv &>/dev/null; then
+    echo "[petfish] WARNING: uv not found. Some skill packs require uv to run Python scripts."
+    echo "         Install: https://docs.astral.sh/uv/getting-started/installation/"
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKS_DIR="$SCRIPT_DIR/packs"
@@ -138,26 +145,31 @@ declare -A ALIASES=(
     [deploy]="repo-deploy-ops-skill-pack"
     [petfish]="petfish-style-skill"
     [ppt]="opencode-ppt-skills"
+    [init]="project-initializer-skill"
 )
 
 # --- Defaults ---
 PACK=""
 TARGET="."
+TARGET_EXPLICIT=false
 PLATFORM="opencode"
 FORCE=false
 LIST=false
+GLOBAL=false
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --pack)     PACK="$2"; shift 2 ;;
-        --target)   TARGET="$2"; shift 2 ;;
+        --target)   TARGET="$2"; TARGET_EXPLICIT=true; shift 2 ;;
         --platform) PLATFORM="$2"; shift 2 ;;
+        --global)   GLOBAL=true; shift ;;
         --force)    FORCE=true; shift ;;
         --list)     LIST=true; shift ;;
         -h|--help)
-            echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--force] [--list]"
-            echo "Aliases: course, testdocs, deploy, petfish, ppt"
+            echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--global] [--force] [--list]"
+            echo "petfish Skill Pack Installer"
+            echo "Aliases: course, testdocs, deploy, petfish, ppt, init"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
@@ -168,6 +180,12 @@ case "$PLATFORM" in
     opencode|antigravity|all) ;;
     *) echo "Error: --platform must be opencode, antigravity, or all" >&2; exit 1 ;;
 esac
+
+if ! $LIST; then
+    echo ""
+    echo "  [petfish] Skill Pack Installer"
+    echo ""
+fi
 
 resolve_pack() {
     local name="$1"
@@ -207,6 +225,13 @@ get_skills_dir() {
     case "$1" in
         opencode)     echo ".opencode/skills" ;;
         antigravity)  echo ".agents/skills" ;;
+    esac
+}
+
+get_global_skills_dir() {
+    case "$1" in
+        opencode)     echo "$HOME/.config/opencode/skills" ;;
+        antigravity)  echo "$HOME/.gemini/antigravity/skills" ;;
     esac
 }
 
@@ -388,6 +413,57 @@ install_for_platform() {
     echo "  [$platform_name] Done: $installed installed, $skipped skipped."
 }
 
+install_global_for_platform() {
+    local platform_name="$1"
+    shift
+    local -a packs=("$@")
+
+    local global_skills_dir
+    global_skills_dir="$(get_global_skills_dir "$platform_name")"
+
+    echo ""
+    echo "[$platform_name] Global install -> $global_skills_dir"
+    echo "  Skills only; skipping AGENTS.md, opencode.json, and registry."
+
+    local installed=0
+    local skipped=0
+
+    mkdir -p "$global_skills_dir"
+
+    for pack_name in "${packs[@]}"; do
+        local pack_opencode="$PACKS_DIR/$pack_name/.opencode"
+        local src_skills="$pack_opencode/skills"
+
+        if [[ ! -d "$src_skills" ]]; then
+            echo "WARN: Pack '$pack_name' has no .opencode/skills directory. Skipping."
+            continue
+        fi
+
+        echo ""
+        echo "  Installing pack globally: $pack_name"
+
+        for item in "$src_skills"/*/; do
+            [[ -d "$item" ]] || continue
+            local item_name
+            item_name="$(basename "$item")"
+            local dst_item="$global_skills_dir/$item_name"
+
+            if [[ -d "$dst_item" ]] && ! $FORCE; then
+                echo "    SKIP skills/$item_name (exists in global dir, use --force to overwrite)"
+                ((skipped++)) || true
+                continue
+            fi
+            [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+            cp -r "$item" "$dst_item"
+            echo "    + skills/$item_name"
+            ((installed++)) || true
+        done
+    done
+
+    echo ""
+    echo "  [$platform_name] Global done: $installed installed, $skipped skipped."
+}
+
 # --- List mode ---
 if $LIST; then
     show_list
@@ -399,9 +475,6 @@ if [[ -z "$PACK" ]]; then
     exit 1
 fi
 
-# --- Resolve target ---
-TARGET="$(cd "$TARGET" && pwd)"
-
 # --- Resolve packs ---
 if [[ "$PACK" == "all" ]]; then
     mapfile -t PACKS < <(get_all_packs)
@@ -409,10 +482,31 @@ else
     PACKS=("$(resolve_pack "$PACK")")
 fi
 
-# --- Install for selected platform(s) ---
-if [[ "$PLATFORM" == "all" ]]; then
-    install_for_platform "opencode" "${PACKS[@]}"
-    install_for_platform "antigravity" "${PACKS[@]}"
-else
-    install_for_platform "$PLATFORM" "${PACKS[@]}"
+if [[ "$PACK" == "init" || "$PACK" == "project-initializer-skill" ]] && ! $GLOBAL && ! $TARGET_EXPLICIT && [[ "$TARGET" == "." ]]; then
+    GLOBAL=true
+    echo "  [info] init pack defaults to global install. Use --target to install locally."
 fi
+
+# --- Resolve target ---
+if ! $GLOBAL; then
+    TARGET="$(cd "$TARGET" && pwd)"
+fi
+
+declare -a PLATFORMS
+if [[ "$PLATFORM" == "all" ]]; then
+    PLATFORMS=("opencode" "antigravity")
+else
+    PLATFORMS=("$PLATFORM")
+fi
+
+# --- Install for selected platform(s) ---
+if $GLOBAL; then
+    for platform_name in "${PLATFORMS[@]}"; do
+        install_global_for_platform "$platform_name" "${PACKS[@]}"
+    done
+    exit 0
+fi
+
+for platform_name in "${PLATFORMS[@]}"; do
+    install_for_platform "$platform_name" "${PACKS[@]}"
+done

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Remote installer for OpenCode skill packs from GitHub.
+# petfish - Remote installer for OpenCode/Antigravity skill packs from GitHub.
 #
 # Usage (curl one-liner):
 #   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
@@ -11,6 +11,12 @@
 #   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | GITHUB_TOKEN=$GITHUB_TOKEN bash -s -- --pack course
 #
 set -euo pipefail
+
+# --- uv availability check ---
+if ! command -v uv &>/dev/null; then
+    echo "[petfish] WARNING: uv not found. Some skill packs require uv to run Python scripts."
+    echo "         Install: https://docs.astral.sh/uv/getting-started/installation/"
+fi
 
 REPO="kylecui/SKILL_builder"
 BRANCH="master"
@@ -137,8 +143,9 @@ declare -A ALIASES=(
     [deploy]="repo-deploy-ops-skill-pack"
     [petfish]="petfish-style-skill"
     [ppt]="opencode-ppt-skills"
+    [init]="project-initializer-skill"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "opencode-ppt-skills")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "opencode-ppt-skills" "project-initializer-skill")
 
 # --- Defaults ---
 PACK=""
@@ -146,6 +153,7 @@ TARGET="."
 PLATFORM="opencode"
 FORCE=false
 LIST=false
+GLOBAL=false
 
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
@@ -154,17 +162,19 @@ while [[ $# -gt 0 ]]; do
         --target)   TARGET="$2"; shift 2 ;;
         --platform) PLATFORM="$2"; shift 2 ;;
         --force)    FORCE=true; shift ;;
+        --global)   GLOBAL=true; shift ;;
         --list)     LIST=true; shift ;;
         --repo)     REPO="$2"; shift 2 ;;
         --branch)   BRANCH="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--force]"
+            echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--force] [--global]"
             echo ""
             echo "Options:"
-            echo "  --pack <name|all>       Pack to install (course, testdocs, deploy, petfish, ppt, or all)"
-            echo "  --target <path>         Target project directory (default: .)"
+            echo "  --pack <name|all>       Pack to install (course, testdocs, deploy, petfish, ppt, init, or all)"
+            echo "  --target <path>         Target project directory (default: ., ignored with --global)"
             echo "  --platform <platform>   Target platform: opencode, antigravity, or all (default: opencode)"
             echo "  --force                 Overwrite existing skills"
+            echo "  --global                Install skills to the global platform skills directory"
             echo "  --list                  List available packs"
             echo "  --repo <owner/repo>     Override GitHub repo (default: $REPO)"
             echo "  --branch <branch>       Override branch (default: $BRANCH)"
@@ -172,6 +182,12 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
+
+if ! $LIST; then
+    echo ""
+    echo "  [petfish] Skill Pack Installer (remote)"
+    echo ""
+fi
 
 # Validate platform
 case "$PLATFORM" in
@@ -189,6 +205,7 @@ if $LIST; then
     echo "  repo-deploy-ops-skill-pack (alias: deploy)"
     echo "  petfish-style-skill (alias: petfish)"
     echo "  opencode-ppt-skills (alias: ppt)"
+    echo "  project-initializer-skill (alias: init)"
     echo ""
     exit 0
 fi
@@ -211,7 +228,7 @@ resolve_pack() {
                 return
             fi
         done
-        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, ppt, all" >&2
+        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, ppt, init, all" >&2
         exit 1
     fi
 }
@@ -222,15 +239,29 @@ else
     PACKS=("$(resolve_pack "$PACK")")
 fi
 
+if [[ "${PACKS[0]}" == "project-initializer-skill" ]] && ! $GLOBAL && [[ "$TARGET" == "." ]]; then
+    GLOBAL=true
+    echo "[petfish] INFO: init defaults to global install when --target is unchanged; enabling --global."
+fi
+
 # --- Resolve target ---
-mkdir -p "$TARGET"
-TARGET="$(cd "$TARGET" && pwd)"
+if ! $GLOBAL; then
+    mkdir -p "$TARGET"
+    TARGET="$(cd "$TARGET" && pwd)"
+fi
 
 # --- Platform path helpers ---
 get_skills_dir() {
     case "$1" in
         opencode)     echo ".opencode/skills" ;;
         antigravity)  echo ".agents/skills" ;;
+    esac
+}
+
+get_global_skills_dir() {
+    case "$1" in
+        opencode)     echo "$HOME/.config/opencode/skills" ;;
+        antigravity)  echo "$HOME/.gemini/antigravity/skills" ;;
     esac
 }
 
@@ -305,6 +336,13 @@ install_for_platform() {
     echo ""
     echo "[$platform_name] Installing..."
 
+    if $GLOBAL; then
+        local global_skills_dir
+        global_skills_dir="$(get_global_skills_dir "$platform_name")"
+        echo "  Global install enabled: $global_skills_dir"
+        mkdir -p "$global_skills_dir"
+    fi
+
     local installed=0
     local skipped=0
 
@@ -319,6 +357,38 @@ install_for_platform() {
         echo "  Installing pack: $pack_name"
 
         local pack_root="$PACKS_DIR/$pack_name"
+
+        if $GLOBAL; then
+            echo "    Copying skills to global directory..."
+
+            local src_skills="$pack_opencode/skills"
+            local global_skills_dir
+            global_skills_dir="$(get_global_skills_dir "$platform_name")"
+
+            if [[ -d "$src_skills" ]]; then
+                for item in "$src_skills"/*/; do
+                    [[ -d "$item" ]] || continue
+                    local item_name
+                    item_name="$(basename "$item")"
+                    local dst_item="$global_skills_dir/$item_name"
+
+                    if [[ -d "$dst_item" ]] && ! $FORCE; then
+                        echo "    SKIP global skills/$item_name (exists, use --force to overwrite)"
+                        ((skipped++)) || true
+                        continue
+                    fi
+                    [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+                    cp -r "$item" "$dst_item"
+                    echo "    + global skills/$item_name -> $global_skills_dir"
+                    ((installed++)) || true
+                done
+            else
+                echo "    WARN: Pack '$pack_name' has no .opencode/skills/ directory. Skipping."
+            fi
+
+            echo "    SKIP project files (AGENTS.md, opencode.json, registry) for global install"
+            continue
+        fi
 
         # --- Merge AGENTS.md ---
         if [[ -f "$pack_root/AGENTS.md" ]]; then

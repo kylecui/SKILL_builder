@@ -1,5 +1,5 @@
-# Remote installer for OpenCode/Antigravity skill packs from GitHub. No clone needed.
-# Usage: & ([scriptblock]::Create((irm <url>))) -Pack course [-Platform opencode|antigravity|all] [-Target .]
+# petfish - Remote installer for OpenCode/Antigravity skill packs from GitHub.
+# Usage: & ([scriptblock]::Create((irm <url>))) -Pack course [-Platform opencode|antigravity|all] [-Target .] [-Global]
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$Pack,
@@ -8,12 +8,25 @@ param(
     [string]$Platform = "opencode",
     [switch]$Force,
     [switch]$List,
+    [switch]$Global,
     [string]$Repo = "kylecui/SKILL_builder",
     [string]$Branch = "master",
     [string]$GitHubToken
 )
 
+if (-not $List) {
+    Write-Host ""
+    Write-Host "  [petfish] Skill Pack Installer (remote)" -ForegroundColor Cyan
+    Write-Host ""
+}
+
 $ErrorActionPreference = "Stop"
+
+# --- uv availability check ---
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Warning "[petfish] uv not found. Some skill packs require uv to run Python scripts."
+    Write-Warning "         Install: https://docs.astral.sh/uv/getting-started/installation/"
+}
 
 # --- Platform path configuration ---
 
@@ -37,6 +50,21 @@ function Get-PlatformConfig([string]$platformName) {
                 RegistryDir = ".agents"
                 MergeJson   = $false
                 GeminiMd    = $true
+            }
+        }
+    }
+}
+
+function Get-GlobalPlatformConfig([string]$platformName) {
+    switch ($platformName) {
+        "opencode" {
+            return @{
+                SkillsDir = Join-Path $HOME ".config/opencode/skills"
+            }
+        }
+        "antigravity" {
+            return @{
+                SkillsDir = Join-Path $HOME ".gemini/antigravity/skills"
             }
         }
     }
@@ -146,10 +174,11 @@ $Aliases = @{
     "course"   = "opencode-course-skills-pack"
     "testdocs" = "opencode-skill-pack-testcases-usage-docs"
     "deploy"   = "repo-deploy-ops-skill-pack"
+    "init"     = "project-initializer-skill"
     "petfish"  = "petfish-style-skill"
     "ppt"      = "opencode-ppt-skills"
 }
-$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "petfish-style-skill", "opencode-ppt-skills")
+$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "project-initializer-skill", "petfish-style-skill", "opencode-ppt-skills")
 
 # --- List mode ---
 if ($List) {
@@ -158,6 +187,7 @@ if ($List) {
     Write-Host "  opencode-course-skills-pack (alias: course)"
     Write-Host "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
     Write-Host "  repo-deploy-ops-skill-pack (alias: deploy)"
+    Write-Host "  project-initializer-skill (alias: init)"
     Write-Host "  petfish-style-skill (alias: petfish)"
     Write-Host "  opencode-ppt-skills (alias: ppt)"
     Write-Host ""
@@ -168,7 +198,7 @@ if ($List) {
 function Resolve-PackName([string]$name) {
     if ($Aliases.ContainsKey($name)) { return $Aliases[$name] }
     if ($AllPacks -contains $name) { return $name }
-    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, ppt, all"
+    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, init, petfish, ppt, all"
     exit 1
 }
 
@@ -178,8 +208,15 @@ $packsToInstall = if ($Pack -eq "all") {
     @(Resolve-PackName $Pack)
 }
 
+if (@($packsToInstall).Count -eq 1 -and @($packsToInstall)[0] -eq "project-initializer-skill" -and -not $Global -and $Target -eq ".") {
+    $Global = $true
+    Write-Host "  [info] init pack defaults to global install. Use -Target to install locally."
+}
+
 # --- Resolve target ---
-$Target = (Resolve-Path $Target -ErrorAction Stop).Path
+if (-not $Global) {
+    $Target = (Resolve-Path $Target -ErrorAction Stop).Path
+}
 
 # --- Download & extract tarball ---
 $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "skill_builder_$(Get-Random)"
@@ -207,6 +244,52 @@ try {
     }
 
     $packsDir = Join-Path $extractDir.FullName "packs"
+
+    function Install-GlobalForPlatform([string]$platformName) {
+        $cfg = Get-GlobalPlatformConfig $platformName
+        $globalSkillsDir = $cfg.SkillsDir
+
+        Write-Host "`n[$platformName] Installing globally..." -ForegroundColor Magenta
+        Write-Host "  Global skills path: $globalSkillsDir" -ForegroundColor Cyan
+
+        $installed = 0
+        $skipped = 0
+
+        if (-not (Test-Path $globalSkillsDir)) {
+            New-Item -ItemType Directory -Path $globalSkillsDir -Force | Out-Null
+        }
+
+        foreach ($packName in $packsToInstall) {
+            $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
+            if (-not (Test-Path $packOpencode)) {
+                Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
+                continue
+            }
+
+            $srcSkills = Join-Path $packOpencode "skills"
+            if (-not (Test-Path $srcSkills)) {
+                Write-Warning "Pack '$packName' has no .opencode/skills/ directory. Skipping."
+                continue
+            }
+
+            Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
+
+            foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
+                $dstItem = Join-Path $globalSkillsDir $item.Name
+                if ((Test-Path $dstItem) -and -not $Force) {
+                    Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
+                    $skipped++
+                    continue
+                }
+                if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
+                $installed++
+            }
+        }
+
+        Write-Host "`n  [$platformName] Global install done: $installed installed, $skipped skipped." -ForegroundColor Cyan
+    }
 
     # --- Install function for a given platform ---
     function Install-ForPlatform([string]$platformName) {
@@ -343,7 +426,11 @@ try {
     $platforms = if ($Platform -eq "all") { @("opencode", "antigravity") } else { @($Platform) }
 
     foreach ($p in $platforms) {
-        Install-ForPlatform $p
+        if ($Global) {
+            Install-GlobalForPlatform $p
+        } else {
+            Install-ForPlatform $p
+        }
     }
 
 } finally {

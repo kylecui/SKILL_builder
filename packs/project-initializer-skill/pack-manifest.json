@@ -1,0 +1,10 @@
+{
+  "name": "project-initializer-skill",
+  "version": "1.0.0",
+  "description": "Safe project initialization wizard for AI-agent-friendly workspaces",
+  "author": "Kyle Cui",
+  "skill_count": 1,
+  "skills": ["project-initializer"],
+  "global_default": true,
+  "platforms": ["opencode", "antigravity"]
+}
