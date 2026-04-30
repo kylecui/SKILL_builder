@@ -265,6 +265,13 @@ get_global_skills_dir() {
     esac
 }
 
+get_global_commands_dir() {
+    case "$1" in
+        opencode)     echo "$HOME/.config/opencode/commands" ;;
+        antigravity)  echo "$HOME/.gemini/antigravity/workflows" ;;
+    esac
+}
+
 get_agents_dir() {
     case "$1" in
         opencode)     echo ".opencode/agents" ;;
@@ -384,6 +391,34 @@ install_for_platform() {
                 done
             else
                 echo "    WARN: Pack '$pack_name' has no .opencode/skills/ directory. Skipping."
+            fi
+
+            # --- Copy commands to global commands dir ---
+            local src_commands="$pack_opencode/commands"
+            if [[ -d "$src_commands" ]]; then
+                local global_commands_dir
+                global_commands_dir="$(get_global_commands_dir "$platform_name")"
+                mkdir -p "$global_commands_dir"
+                for item in "$src_commands"/*; do
+                    [[ -e "$item" ]] || continue
+                    local item_name
+                    item_name="$(basename "$item")"
+                    local dst_item="$global_commands_dir/$item_name"
+
+                    if [[ -e "$dst_item" ]] && ! $FORCE; then
+                        echo "    SKIP global commands/$item_name (exists, use --force to overwrite)"
+                        ((skipped++)) || true
+                        continue
+                    fi
+                    if [[ -d "$item" ]]; then
+                        [[ -d "$dst_item" ]] && rm -rf "$dst_item"
+                        cp -r "$item" "$dst_item"
+                    else
+                        cp -f "$item" "$dst_item"
+                    fi
+                    echo "    + global commands/$item_name -> $global_commands_dir"
+                    ((installed++)) || true
+                done
             fi
 
             echo "    SKIP project files (AGENTS.md, opencode.json, registry) for global install"

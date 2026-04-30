@@ -60,11 +60,13 @@ function Get-GlobalPlatformConfig([string]$platformName) {
         "opencode" {
             return @{
                 SkillsDir = Join-Path $HOME ".config/opencode/skills"
+                CommandsDir = Join-Path $HOME ".config/opencode/commands"
             }
         }
         "antigravity" {
             return @{
                 SkillsDir = Join-Path $HOME ".gemini/antigravity/skills"
+                CommandsDir = Join-Path $HOME ".gemini/antigravity/workflows"
             }
         }
     }
@@ -285,6 +287,31 @@ try {
                 Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
                 Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
                 $installed++
+            }
+
+            # --- Copy commands to global commands dir ---
+            $srcCommands = Join-Path $packOpencode "commands"
+            if (Test-Path $srcCommands) {
+                $targetCommands = $cfg.CommandsDir
+                if (-not (Test-Path $targetCommands)) {
+                    New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
+                }
+                foreach ($item in (Get-ChildItem -Path $srcCommands)) {
+                    $dstItem = Join-Path $targetCommands $item.Name
+                    if ((Test-Path $dstItem) -and -not $Force) {
+                        Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
+                        $skipped++
+                        continue
+                    }
+                    if ($item.PSIsContainer) {
+                        if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                        Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                    } else {
+                        Copy-Item -Path $item.FullName -Destination $dstItem -Force
+                    }
+                    Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
+                    $installed++
+                }
             }
         }
 

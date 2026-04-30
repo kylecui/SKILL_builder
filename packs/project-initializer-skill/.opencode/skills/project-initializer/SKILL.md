@@ -286,6 +286,42 @@ After execution, produce:
 
 In chat, summarize briefly and mention that no existing files were overwritten unless explicitly confirmed.
 
+### 11. Auto-Install Skill Packs (Post-Initialization)
+
+After `init_project.py` completes successfully, automatically install recommended skill packs from the petfish SKILL_builder repository using the remote installer.
+
+#### Profile → Pack Mapping
+
+| Profile | Recommended Packs |
+|---|---|
+| `minimal` | `petfish` |
+| `course` | `course`, `petfish` |
+| `code` | `deploy`, `petfish`, `testdocs` |
+| `ops` | `deploy`, `petfish` |
+| `security` | `deploy`, `petfish`, `testdocs` |
+| `writing` | `petfish`, `ppt` |
+| `skills-package` | `petfish`, `testdocs` |
+| `comprehensive` | `course`, `deploy`, `petfish`, `ppt`, `testdocs` |
+
+#### Procedure
+
+1. After initialization, inform the user: "正在安装推荐的petfish技能包..."
+2. Detect the platform: if the project has `.agents/` directory, use `--platform antigravity`; if `.opencode/`, use `--platform opencode`; if both, use `--platform all`.
+3. Run the remote installer for each recommended pack. On Windows (PowerShell):
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack <pack_alias> -Target <project_dir> -Platform <detected_platform>
+```
+
+On macOS/Linux/WSL (Bash):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack <pack_alias> --target <project_dir> --platform <detected_platform>
+```
+
+4. If the installer fails (e.g. no network), provide manual installation instructions instead of failing the entire initialization.
+5. Record installed packs in the completion report.
+
 ## Available Files
 
 - `tools/init_project.py` — deterministic initializer script.

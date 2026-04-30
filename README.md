@@ -145,7 +145,9 @@ Global skills live at:
 
 ```
 ~/.config/opencode/skills/       ← OpenCode global skills
+~/.config/opencode/commands/     ← OpenCode global commands
 ~/.gemini/antigravity/skills/    ← Antigravity global skills
+~/.gemini/antigravity/workflows/ ← Antigravity global workflows
 ```
 
 ## Prerequisites
