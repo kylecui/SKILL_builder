@@ -322,6 +322,110 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 4. If the installer fails (e.g. no network), provide manual installation instructions instead of failing the entire initialization.
 5. Record installed packs in the completion report.
 
+### 12. Post-Init Wizard
+
+After the completion report (section 10) and skill pack installation (section 11), enter wizard mode to guide the user through remaining setup. Present each step as a numbered choice. The user can complete it interactively or say "稍后再说"/"skip" to defer.
+
+**Wizard Entry Prompt** (show this to the user):
+
+```
+📋 项目骨架已就绪。接下来我可以引导你完成以下配置，每一步都可以选择「稍后再说」：
+
+1️⃣  AGENTS.md — 填写项目目标、约束和协作规则
+2️⃣  README.md — 写入项目描述和核心功能
+3️⃣  任务规划 — 在tasks/backlog.md中写入前3个可执行任务
+4️⃣  Git初始化 — git init + 首次commit
+5️⃣  Python开发环境 — uv init + 安装开发依赖
+6️⃣  MCP配置 — 连接外部服务
+
+从哪一步开始？（输入编号，或「全部跳过」）
+```
+
+#### Step 1: AGENTS.md
+
+Ask the user:
+- "这个项目的一句话目标是什么？"
+- "有哪些硬性约束？（如技术栈、安全要求、不可触碰的文件）"
+- "AI agent的协作边界是什么？（如：可以自由创建测试文件，但不可修改deploy配置）"
+
+Based on answers, fill in the AGENTS.md placeholders. If the user says "稍后再说", leave the existing template unchanged.
+
+#### Step 2: README.md
+
+Ask the user:
+- "用一句话描述这个项目的用途"
+- "核心功能有哪些？（列举2-5个）"
+- "目标用户是谁？"
+
+Based on answers, replace README.md placeholders with real content. If skipped, leave the template.
+
+#### Step 3: Task Backlog
+
+Ask the user:
+- "项目的前3个可执行任务是什么？（可以简单描述）"
+
+Write tasks into `tasks/backlog.md` in the format:
+
+```markdown
+# Backlog
+
+## To Do
+
+- [ ] Task 1 description
+- [ ] Task 2 description
+- [ ] Task 3 description
+```
+
+If skipped, leave the file empty or with a single placeholder task.
+
+#### Step 4: Git Init
+
+Ask: "要现在初始化Git仓库吗？(y/n)"
+
+If yes, execute:
+
+```bash
+cd <project_dir> && git init && git add . && git commit -m "init: project scaffold via petfish project-initializer"
+```
+
+If skipped, remind the user to do it later.
+
+#### Step 5: Python Development Environment
+
+Ask: "项目需要Python开发环境吗？(y/n)"
+
+If yes:
+1. Check if `uv` is available. If not, show install URL: https://docs.astral.sh/uv/getting-started/installation/
+2. Ask: "需要哪些开发依赖？（默认：pytest, ruff, mypy）"
+3. Execute:
+
+```bash
+cd <project_dir> && uv init && uv add --dev <dependencies>
+```
+
+If skipped, no action.
+
+#### Step 6: MCP Configuration
+
+Ask: "需要连接哪些外部MCP服务？（如filesystem, database, API等）"
+
+If the user provides services, update `mcp/mcp-config.example.json` with appropriate placeholders. If skipped, leave the example file unchanged.
+
+#### Wizard Completion
+
+After all steps (completed or skipped), show:
+
+```
+✅ 项目初始化向导完成！
+
+已完成：[list completed steps]
+已跳过：[list skipped steps]（随时可以手动完成）
+
+💡 提示：刚才安装的技能包已经可以立即使用，无需重启。你可以直接在对话中调用它们。
+```
+
+If any steps were skipped, briefly list the manual commands the user can run later.
+
 ## Available Files
 
 - `tools/init_project.py` — deterministic initializer script.

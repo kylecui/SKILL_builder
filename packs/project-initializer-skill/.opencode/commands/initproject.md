@@ -12,5 +12,5 @@ $ARGUMENTS
 3. 如果用户没有明确指定profile，简要询问项目类型后再执行
 4. 使用`tools/init_project.py`进行确定性初始化，默认`--no-overwrite`
 5. 初始化完成后，按照SKILL.md第11节的profile→pack映射表，自动运行petfish远程安装器安装推荐的技能包
-6. 生成完整报告，包含初始化结果和技能包安装结果，提示用户下一步操作
+6. 技能包安装完成后，进入Post-Init Wizard（SKILL.md第12节），逐步引导用户完成AGENTS.md、README.md、任务规划、Git初始化、Python环境、MCP配置等后续设置，每步可跳过
 7. 如果uv未安装且项目需要Python环境，提醒用户安装uv
