@@ -1,14 +1,6 @@
-```
-        ___
-      /`   `\
-     |  o  o |    ><(((º>
-     |  \__/ |
-      \ ___ /    PEtFiSh
-       /   \
-      / \_/ \    胖 鱼
-     |       |
-      \_____/
-```
+<p align="center">
+  <img src="assets/petfish-logo.png" alt="胖鱼 PEtFiSh logo" width="360" />
+</p>
 
 # 胖鱼 PEtFiSh
 
@@ -17,6 +9,19 @@
 从项目初始化到技能包自动安装，胖鱼引导你搭建AI-agent友好的工作区，并根据项目类型自适应安装所需技能。
 
 From project initialization to adaptive skill installation — PEtFiSh guides you through setting up AI-agent-friendly workspaces and automatically installs the right skills for your project type.
+
+Official brand assets:
+- `assets/petfish-logo.png` — primary logo
+- `assets/petfish-icon-256.png` — small icon/app/avatar version
+- `assets/petfish-icon-64.png` — compact UI/icon version
+- `assets/petfish-favicon-32.png` — favicon-sized PNG
+- `assets/petfish-favicon.ico` — multi-size favicon for web/app packaging
+
+Branding work-in-progress files:
+- `branding/logo_candidate_1.png`
+- `branding/logo_candidate_2.png`
+- `branding/logo_candidate_1_brand.png`
+- `branding/logo_candidate_1_brand_B.png` — approved source variant
 
 ## How It Works
 
