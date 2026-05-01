@@ -6,6 +6,9 @@
 
 **Self-adaptive skill installer for AI-assisted projects.**
 
+Repo name: `SKILL_builder`  
+Product name: `胖鱼 PEtFiSh`
+
 从项目初始化到技能包自动安装，胖鱼引导你搭建AI-agent友好的工作区，并根据项目类型自适应安装所需技能。
 
 From project initialization to adaptive skill installation — PEtFiSh guides you through setting up AI-agent-friendly workspaces and automatically installs the right skills for your project type.
@@ -186,7 +189,7 @@ your-project/
 ## Structure
 
 ```
-SKILL_builder/
+SKILL_builder  # 胖鱼 PEtFiSh repo
 ├── packs/
 │   ├── project-initializer-skill/    ← init (global-default)
 │   ├── opencode-course-skills-pack/  ← course
