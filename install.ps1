@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    petfish - Install OpenCode/Antigravity skill packs.
+    胖鱼 PEtFiSh - Install OpenCode/Antigravity skill packs.
 
 .DESCRIPTION
     Copies skills, commands, and agents from one or more skill packs
@@ -48,13 +48,15 @@ $ErrorActionPreference = "Stop"
 
 # --- uv availability check ---
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    Write-Warning "[petfish] uv not found. Some skill packs require uv to run Python scripts."
+    Write-Warning "[胖鱼 PEtFiSh] uv not found. Some skill packs require uv to run Python scripts."
     Write-Warning "         Install: https://docs.astral.sh/uv/getting-started/installation/"
 }
 
 if (-not $List) {
     Write-Host ""
+    Write-Host "  ><(((^>  胖鱼 PEtFiSh" -ForegroundColor DarkCyan
     Write-Host "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer" -ForegroundColor Cyan
+    Write-Host "  Initialize -> Auto-install -> Work immediately" -ForegroundColor DarkGray
     Write-Host ""
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# petfish - Remote installer for OpenCode/Antigravity skill packs from GitHub.
+# 胖鱼 PEtFiSh - Remote installer for OpenCode/Antigravity skill packs from GitHub.
 #
 # Usage (curl one-liner):
 #   curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.sh | bash -s -- --pack course
@@ -14,7 +14,7 @@ set -euo pipefail
 
 # --- uv availability check ---
 if ! command -v uv &>/dev/null; then
-    echo "[petfish] WARNING: uv not found. Some skill packs require uv to run Python scripts."
+    echo "[胖鱼 PEtFiSh] WARNING: uv not found. Some skill packs require uv to run Python scripts."
     echo "         Install: https://docs.astral.sh/uv/getting-started/installation/"
 fi
 
@@ -185,7 +185,9 @@ done
 
 if ! $LIST; then
     echo ""
+    echo "  ><(((^>  胖鱼 PEtFiSh"
     echo "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer (remote)"
+    echo "  Initialize -> Auto-install -> Work immediately"
     echo ""
 fi
 

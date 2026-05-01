@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install petfish skill packs into a target project or global skills directory.
+# Install 胖鱼 PEtFiSh skill packs into a target project or global skills directory.
 #
 # Usage:
 #   ./install.sh --pack course --target ~/my-project
@@ -14,7 +14,7 @@ set -euo pipefail
 
 # --- uv availability check ---
 if ! command -v uv &>/dev/null; then
-    echo "[petfish] WARNING: uv not found. Some skill packs require uv to run Python scripts."
+    echo "[胖鱼 PEtFiSh] WARNING: uv not found. Some skill packs require uv to run Python scripts."
     echo "         Install: https://docs.astral.sh/uv/getting-started/installation/"
 fi
 
@@ -183,7 +183,9 @@ esac
 
 if ! $LIST; then
     echo ""
+    echo "  ><(((^>  胖鱼 PEtFiSh"
     echo "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer"
+    echo "  Initialize -> Auto-install -> Work immediately"
     echo ""
 fi
 
