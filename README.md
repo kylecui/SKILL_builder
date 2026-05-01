@@ -16,12 +16,25 @@ Official brand assets:
 - `assets/petfish-icon-64.png` — compact UI/icon version
 - `assets/petfish-favicon-32.png` — favicon-sized PNG
 - `assets/petfish-favicon.ico` — multi-size favicon for web/app packaging
+- `assets/petfish-social-preview.png` — GitHub/social preview image
 
 Branding work-in-progress files:
 - `branding/logo_candidate_1.png`
 - `branding/logo_candidate_2.png`
 - `branding/logo_candidate_1_brand.png`
 - `branding/logo_candidate_1_brand_B.png` — approved source variant
+
+## Brand Asset Preview
+
+<p align="center">
+  <img src="assets/petfish-icon-256.png" alt="胖鱼 PEtFiSh icon" width="128" />
+</p>
+
+Recommended usage:
+- GitHub repo social preview → `assets/petfish-social-preview.png`
+- README / docs hero image → `assets/petfish-logo.png`
+- App icon / avatar → `assets/petfish-icon-256.png`
+- Browser favicon → `assets/petfish-favicon.ico`
 
 ## How It Works
 

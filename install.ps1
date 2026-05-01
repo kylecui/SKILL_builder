@@ -54,7 +54,7 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 
 if (-not $List) {
     Write-Host ""
-    Write-Host "  [petfish] Skill Pack Installer" -ForegroundColor Cyan
+    Write-Host "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer" -ForegroundColor Cyan
     Write-Host ""
 }
 

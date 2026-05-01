@@ -185,7 +185,7 @@ done
 
 if ! $LIST; then
     echo ""
-    echo "  [petfish] Skill Pack Installer (remote)"
+    echo "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer (remote)"
     echo ""
 fi
 

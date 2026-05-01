@@ -168,7 +168,7 @@ while [[ $# -gt 0 ]]; do
         --list)     LIST=true; shift ;;
         -h|--help)
             echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--global] [--force] [--list]"
-            echo "petfish Skill Pack Installer"
+            echo "胖鱼 PEtFiSh Self-adaptive Skill Installer"
             echo "Aliases: course, testdocs, deploy, petfish, ppt, init"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -183,7 +183,7 @@ esac
 
 if ! $LIST; then
     echo ""
-    echo "  [petfish] Skill Pack Installer"
+    echo "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer"
     echo ""
 fi
 

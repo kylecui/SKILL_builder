@@ -16,7 +16,7 @@ param(
 
 if (-not $List) {
     Write-Host ""
-    Write-Host "  [petfish] Skill Pack Installer (remote)" -ForegroundColor Cyan
+    Write-Host "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer (remote)" -ForegroundColor Cyan
     Write-Host ""
 }
 
