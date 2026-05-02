@@ -29,6 +29,9 @@
 - `/petfish detect` — 检测当前平台
 - `/petfish create <name>` — 创建新skill
 - `/petfish lint [path]` — 验证skill质量
+- `/petfish mine <repo>` — 从仓库挖掘候选skill
+- `/petfish audit <path>` — skill安全审计
+- `/petfish gate <path>` — 运行发布门禁（lint+security→决策）
 
 ## 行为边界
 

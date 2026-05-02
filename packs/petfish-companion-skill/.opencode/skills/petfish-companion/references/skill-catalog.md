@@ -121,6 +121,39 @@
 - **脚本**：`skill-lint/scripts/lint_skill.py`
 - **触发关键词**：检查skill、lint skill、验证技能质量、skill quality
 
+### repo-skill-miner
+- **定位**：从开源仓库挖掘可复用skill
+- **核心能力**：
+  - 分析GitHub或本地仓库结构
+  - 识别可复用工作流（CI/CD、Docker、脚本、Agent框架）
+  - 评估候选skill的复杂度、工具需求、安全风险
+  - 生成mining报告（markdown/json）
+  - 支持quick/standard/deep三种扫描深度
+- **脚本**：`repo-skill-miner/scripts/mine_repo.py`
+- **触发关键词**：分析仓库、挖掘skill、mine repo、skillize、extract skills
+
+### skill-security-auditor
+- **定位**：skill安全审计
+- **核心能力**：
+  - 静态分析scripts/中的危险命令（rm -rf、eval、curl|bash）
+  - 检测secret访问（.env、.ssh、token）
+  - 检测远程代码执行风险
+  - 检测过宽文件系统权限
+  - 输出风险评分(0.0-1.0)和pass/fail判定
+  - 支持递归批量审计
+- **脚本**：`skill-security-auditor/scripts/audit_skill.py`
+- **触发关键词**：安全审计、security audit、skill安全、audit skill
+
+### quality-gate
+- **定位**：skill发布门禁
+- **核心能力**：
+  - 依次运行lint + security audit + metadata验证
+  - 综合评审生成发布决策：PASS/CONDITIONAL/FAIL
+  - 支持递归批量门禁
+  - 可集成GitHub Action和pre-commit hook
+- **脚本**：`quality-gate/scripts/run_gate.py`
+- **触发关键词**：发布门禁、quality gate、publish skill、can this skill be released
+
 ## Profile→Pack映射
 
 | Profile | 自动安装的Pack |

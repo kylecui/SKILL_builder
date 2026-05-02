@@ -5,7 +5,7 @@ description: >
   跨市场搜索skill、创建新skill、验证skill质量、
   获取安装建议、检测当前平台。
   Trigger: /petfish [subcommand]
-  Subcommands: status, catalog, suggest, install <alias>, detect, search <keyword>, create <name>, lint [path]
+  Subcommands: status, catalog, suggest, install <alias>, detect, search <keyword>, create <name>, lint [path], mine <repo>, audit <path>, gate <path>
 ---
 
 # /petfish — 胖鱼PEtFiSh Companion
@@ -139,3 +139,48 @@ uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path> --fix-app
 ```
 
 输出100分制评分和具体问题列表。
+
+### /petfish mine \<repo\>
+
+从GitHub仓库或本地仓库挖掘可提取为skill的工作流：
+
+```bash
+# 分析本地仓库
+uv run .opencode/skills/repo-skill-miner/scripts/mine_repo.py --repo <local-path>
+
+# 分析GitHub仓库
+uv run .opencode/skills/repo-skill-miner/scripts/mine_repo.py --repo <github-url>
+
+# 深度扫描
+uv run .opencode/skills/repo-skill-miner/scripts/mine_repo.py --repo <repo> --depth deep
+```
+
+输出mining报告，包括候选skill、工具需求、安全风险和优先级排名。
+
+### /petfish audit \<path\>
+
+对skill进行安全审计：
+
+```bash
+# 审计单个skill
+uv run .opencode/skills/skill-security-auditor/scripts/audit_skill.py --path <skill-path>
+
+# 递归审计所有skill
+uv run .opencode/skills/skill-security-auditor/scripts/audit_skill.py --path .opencode/skills/ --recursive
+```
+
+输出风险评分(0.0-1.0)和安全发现列表。
+
+### /petfish gate \<path\>
+
+运行完整发布门禁（lint + security audit + metadata验证 → 发布决策）：
+
+```bash
+# 单个skill门禁
+uv run .opencode/skills/quality-gate/scripts/run_gate.py --path <skill-path>
+
+# 批量门禁
+uv run .opencode/skills/quality-gate/scripts/run_gate.py --path .opencode/skills/ --recursive
+```
+
+输出PASS/CONDITIONAL/FAIL决策及详细报告。

@@ -51,6 +51,9 @@ metadata:
 | 创建skill、新建技能、generate skill | skill-author (内置) | — |
 | 检查skill质量、lint、验证skill | skill-lint (内置) | — |
 | 搜索skill、找MCP、marketplace | marketplace-connector (内置) | — |
+| 分析仓库、挖掘skill、mine repo | repo-skill-miner (内置) | — |
+| 安全审计、security audit、skill安全 | skill-security-auditor (内置) | — |
+| 发布门禁、quality gate、publish skill | quality-gate (内置) | — |
 
 ### 2.2 检查方法
 
@@ -194,6 +197,36 @@ uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path>
 ```
 
 支持`--recursive`扫描整个目录，`--fix`预览修复建议，`--fix-apply`自动修复。
+
+### 4.8 /petfish mine \<repo\>
+
+分析GitHub仓库或本地仓库，挖掘可提取为skill的可复用工作流：
+
+```bash
+uv run .opencode/skills/repo-skill-miner/scripts/mine_repo.py --repo <repo-url-or-path>
+```
+
+支持`--depth quick/standard/deep`控制扫描深度，`--format markdown/json`控制输出格式。
+
+### 4.9 /petfish audit \<path\>
+
+对skill进行安全审计：
+
+```bash
+uv run .opencode/skills/skill-security-auditor/scripts/audit_skill.py --path <skill-path>
+```
+
+输出风险评分(0.0-1.0)和安全发现。支持`--recursive`批量审计。
+
+### 4.10 /petfish gate \<path\>
+
+运行完整发布门禁（lint + security + metadata → 发布决策）：
+
+```bash
+uv run .opencode/skills/quality-gate/scripts/run_gate.py --path <skill-path>
+```
+
+支持`--recursive`批量门禁。输出PASS/CONDITIONAL/FAIL决策。
 
 ## 5. 治理规则
 

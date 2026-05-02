@@ -1,13 +1,16 @@
 {
   "name": "petfish-companion-skill",
   "version": "0.2.0",
-  "description": "PEtFiSh常驻伙伴 — 感知需求、推荐skill、管理已装状态、跨市场搜索、创建新skill、质量验证。",
+  "description": "PEtFiSh常驻伙伴 — 感知需求、推荐skill、跨市场搜索、创建/审计/门禁skill、挖掘仓库skill。",
   "compatibility": "opencode",
   "skills": [
     "petfish-companion",
     "marketplace-connector",
     "skill-author",
-    "skill-lint"
+    "skill-lint",
+    "repo-skill-miner",
+    "skill-security-auditor",
+    "quality-gate"
   ],
   "commands": [
     "petfish"
@@ -29,6 +32,15 @@
     ".opencode/skills/skill-lint/SKILL.md",
     ".opencode/skills/skill-lint/references/lint-rules.md",
     ".opencode/skills/skill-lint/scripts/lint_skill.py",
+    ".opencode/skills/repo-skill-miner/SKILL.md",
+    ".opencode/skills/repo-skill-miner/references/mining-methodology.md",
+    ".opencode/skills/repo-skill-miner/scripts/mine_repo.py",
+    ".opencode/skills/skill-security-auditor/SKILL.md",
+    ".opencode/skills/skill-security-auditor/references/security-checklist.md",
+    ".opencode/skills/skill-security-auditor/scripts/audit_skill.py",
+    ".opencode/skills/quality-gate/SKILL.md",
+    ".opencode/skills/quality-gate/references/gate-standards.md",
+    ".opencode/skills/quality-gate/scripts/run_gate.py",
     ".opencode/commands/petfish.md"
   ]
 }
