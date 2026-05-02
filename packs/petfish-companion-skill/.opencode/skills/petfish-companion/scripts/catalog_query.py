@@ -2,7 +2,10 @@
 """
 PEtFiSh Companion — Skill Catalog Query
 
-Reads the skill-catalog.md reference file and supports:
+Dynamically reads pack-manifest.json from each pack directory, with embedded
+fallback data for offline/remote operation.
+
+Supports:
   --list          List all packs with aliases and descriptions
   --search TERM   Search packs by keyword (matches name, triggers, capabilities)
   --profile NAME  Show packs auto-installed for a given profile
@@ -17,158 +20,230 @@ Usage:
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
-# Catalog data (embedded for zero-dependency operation)
-# Keep in sync with references/skill-catalog.md
+# Alias → pack directory name mapping (single source of truth for aliases)
 # ---------------------------------------------------------------------------
 
-CATALOG = [
-    {
-        "alias": "init",
-        "pack": "project-initializer-skill",
-        "description": "项目初始化器 — 创建标准目录结构、自动安装推荐skill、运行post-init wizard",
-        "install_scope": "global",
-        "skill_count": 1,
-        "triggers": ["初始化", "新项目", "project init", "scaffold", "创建项目"],
-    },
-    {
-        "alias": "companion",
-        "pack": "petfish-companion-skill",
-        "description": "常驻伙伴 — 感知需求、推荐skill、管理已装状态、连接三方市场",
-        "install_scope": "global",
-        "skill_count": 1,
-        "triggers": ["/petfish", "what skills", "what can you do", "help with"],
-    },
-    {
-        "alias": "course",
-        "pack": "opencode-course-skills-pack",
-        "description": "课程开发全生命周期 — 规划、提纲、正文、实验、资料、QA/QC",
-        "install_scope": "project",
-        "skill_count": 15,
-        "triggers": [
-            "课程",
-            "教学",
-            "大纲",
-            "课时",
-            "模块",
-            "学员",
-            "教师",
-            "实验",
-            "QA",
-            "QC",
-            "发布",
-            "讲义",
-        ],
-    },
-    {
-        "alias": "deploy",
-        "pack": "repo-deploy-ops-skill-pack",
-        "description": "部署与运维 — 运行时识别、主机检查、部署执行、验证、运维、回滚",
-        "install_scope": "project",
-        "skill_count": 7,
-        "triggers": [
-            "部署",
-            "上线",
-            "deploy",
-            "Docker",
-            "服务器",
-            "运维",
-            "回滚",
-            "health check",
-            "systemctl",
-            "nginx",
-        ],
-    },
-    {
-        "alias": "petfish",
-        "pack": "petfish-style-skill",
-        "description": "工程写作风格改写 — 去AI味、说人话、中英文紧凑混排",
-        "install_scope": "project",
-        "skill_count": 1,
-        "triggers": [
-            "说人话",
-            "润色",
-            "去AI味",
-            "风格",
-            "改写",
-            "rewrite",
-            "polish",
-            "humanize",
-        ],
-    },
-    {
-        "alias": "ppt",
-        "pack": "opencode-ppt-skills",
-        "description": "PPT设计与制作 — 读取/生成PPTX、Slide QA、视觉渲染",
-        "install_scope": "project",
-        "skill_count": 2,
-        "triggers": ["PPT", "幻灯片", "演示", "slide", "deck", "presentation", "PPTX"],
-    },
-    {
-        "alias": "testdocs",
-        "pack": "opencode-skill-pack-testcases-usage-docs",
-        "description": "测试用例与使用文档生成 — test case、覆盖率、README、API docs",
-        "install_scope": "project",
-        "skill_count": 2,
-        "triggers": [
-            "测试用例",
-            "test case",
-            "测试矩阵",
-            "文档",
-            "README",
-            "usage docs",
-            "API docs",
-        ],
-    },
-]
+ALIAS_MAP = {
+    "init": "project-initializer-skill",
+    "companion": "petfish-companion-skill",
+    "course": "opencode-course-skills-pack",
+    "deploy": "repo-deploy-ops-skill-pack",
+    "petfish": "petfish-style-skill",
+    "ppt": "opencode-ppt-skills",
+    "testdocs": "opencode-skill-pack-testcases-usage-docs",
+    "trustskills": "trustskills",
+}
+
+# Reverse map: pack name → alias
+PACK_TO_ALIAS = {v: k for k, v in ALIAS_MAP.items()}
+
+# Install scope overrides (packs not listed default to "project")
+GLOBAL_PACKS = {"init", "companion"}
+
+# Trigger keywords per alias (for search — not stored in manifest)
+TRIGGERS = {
+    "init": ["初始化", "新项目", "project init", "scaffold", "创建项目"],
+    "companion": ["/petfish", "what skills", "what can you do", "help with"],
+    "course": [
+        "课程",
+        "教学",
+        "大纲",
+        "课时",
+        "模块",
+        "学员",
+        "教师",
+        "实验",
+        "QA",
+        "QC",
+        "发布",
+        "讲义",
+    ],
+    "deploy": [
+        "部署",
+        "上线",
+        "deploy",
+        "Docker",
+        "服务器",
+        "运维",
+        "回滚",
+        "health check",
+        "systemctl",
+        "nginx",
+    ],
+    "petfish": [
+        "说人话",
+        "润色",
+        "去AI味",
+        "风格",
+        "改写",
+        "rewrite",
+        "polish",
+        "humanize",
+    ],
+    "ppt": ["PPT", "幻灯片", "演示", "slide", "deck", "presentation", "PPTX"],
+    "testdocs": [
+        "测试用例",
+        "test case",
+        "测试矩阵",
+        "文档",
+        "README",
+        "usage docs",
+        "API docs",
+    ],
+    "trustskills": [
+        "skill trust",
+        "skill安全",
+        "治理",
+        "可信度",
+        "trust scan",
+        "governance",
+        "risk score",
+        "redline",
+    ],
+}
 
 PROFILES = {
     "minimal": ["petfish"],
     "course": ["course", "petfish"],
     "code": ["deploy", "petfish", "testdocs"],
     "ops": ["deploy", "petfish"],
-    "security": ["deploy", "petfish", "testdocs"],
+    "security": ["deploy", "petfish", "testdocs", "trustskills"],
     "writing": ["petfish", "ppt"],
     "skills-package": ["petfish", "testdocs"],
-    "comprehensive": ["course", "deploy", "petfish", "ppt", "testdocs"],
+    "comprehensive": ["course", "deploy", "petfish", "ppt", "testdocs", "trustskills"],
 }
+
+
+def _find_packs_root() -> Path | None:
+    """Walk up from this script to find the packs/ directory."""
+    # Script lives in: packs/<pack>/.opencode/skills/<skill>/scripts/
+    # So packs/ is 6 levels up
+    current = Path(__file__).resolve()
+    for _ in range(8):
+        current = current.parent
+        packs_dir = current / "packs"
+        if packs_dir.is_dir():
+            return packs_dir
+    return None
+
+
+def _load_manifest(pack_dir: Path) -> dict | None:
+    """Load pack-manifest.json from a pack directory."""
+    manifest_path = pack_dir / "pack-manifest.json"
+    if not manifest_path.exists():
+        return None
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def build_catalog() -> list[dict]:
+    """Build catalog from manifest files, with embedded fallback."""
+    packs_root = _find_packs_root()
+    catalog = []
+
+    for alias, pack_name in ALIAS_MAP.items():
+        entry = {
+            "alias": alias,
+            "pack": pack_name,
+            "install_scope": "global" if alias in GLOBAL_PACKS else "project",
+            "triggers": TRIGGERS.get(alias, []),
+        }
+
+        manifest = None
+        if packs_root:
+            pack_dir = packs_root / pack_name
+            if pack_dir.is_dir():
+                manifest = _load_manifest(pack_dir)
+
+        if manifest:
+            entry["description"] = manifest.get("description", "")
+            entry["version"] = manifest.get("version", "unknown")
+            entry["skill_count"] = manifest.get(
+                "skill_count", len(manifest.get("skills", []))
+            )
+            entry["command_count"] = manifest.get(
+                "command_count", len(manifest.get("commands", []))
+            )
+            entry["agent_count"] = manifest.get(
+                "agent_count", len(manifest.get("agents", []))
+            )
+        else:
+            # Fallback: minimal info
+            entry["description"] = ""
+            entry["version"] = "unknown"
+            entry["skill_count"] = 0
+            entry["command_count"] = 0
+            entry["agent_count"] = 0
+
+        catalog.append(entry)
+
+    return catalog
+
+
+def _counts_str(entry: dict) -> str:
+    """Format skill/cmd/agent counts as compact string."""
+    parts = []
+    sc = entry.get("skill_count", 0)
+    cc = entry.get("command_count", 0)
+    ac = entry.get("agent_count", 0)
+    if sc:
+        parts.append(f"skills={sc}")
+    if cc:
+        parts.append(f"cmds={cc}")
+    if ac:
+        parts.append(f"agents={ac}")
+    return " ".join(parts) if parts else ""
 
 
 def list_packs(as_json: bool = False):
     """List all packs."""
+    catalog = build_catalog()
+
     if as_json:
-        print(json.dumps(CATALOG, ensure_ascii=False, indent=2))
+        print(json.dumps(catalog, ensure_ascii=False, indent=2))
         return
 
-    print("┌─────────────────────────────────────────────────────────────┐")
-    print("│  ><(((^>  PEtFiSh Skill Catalog                           │")
-    print("├───────────┬─────────────────────────────────────────────────┤")
-    for p in CATALOG:
-        alias = p["alias"].ljust(10)
-        desc = p["description"][:48]
+    print("Available packs:")
+    print("-" * 60)
+    for p in catalog:
+        alias = p["alias"]
+        desc = p["description"]
         scope = "🌐" if p["install_scope"] == "global" else "📁"
-        print(f"│ {scope} {alias}│ {desc.ljust(48)}│")
-    print("└───────────┴─────────────────────────────────────────────────┘")
-    print()
+        counts = _counts_str(p)
+        version = p.get("version", "")
+        ver_str = f"v{version}" if version and version != "unknown" else ""
+
+        # Format: scope alias (pack_name) ver  counts
+        header = f"  {scope} {alias} ({p['pack']})"
+        meta_parts = [x for x in [ver_str, counts] if x]
+        meta = "  " + " ".join(meta_parts) if meta_parts else ""
+        print(f"{header}{meta}")
+        if desc:
+            print(f"     {desc}")
+    print("-" * 60)
     print("🌐 = global install   📁 = project install")
     print("Use --search <keyword> to filter by capability.")
 
 
 def search_packs(term: str, as_json: bool = False):
     """Search packs by keyword across name, description, and triggers."""
+    catalog = build_catalog()
     term_lower = term.lower()
     results = []
-    for p in CATALOG:
+    for p in catalog:
         searchable = " ".join(
             [
                 p["alias"],
                 p["pack"],
-                p["description"],
-                " ".join(p["triggers"]),
+                p.get("description", ""),
+                " ".join(p.get("triggers", [])),
             ]
         ).lower()
         if term_lower in searchable:
@@ -184,9 +259,11 @@ def search_packs(term: str, as_json: bool = False):
 
     print(f"Found {len(results)} pack(s) matching '{term}':\n")
     for p in results:
-        matched = [t for t in p["triggers"] if term_lower in t.lower()]
-        print(f"  {p['alias']} — {p['pack']}")
-        print(f"    {p['description']}")
+        matched = [t for t in p.get("triggers", []) if term_lower in t.lower()]
+        counts = _counts_str(p)
+        print(f"  {p['alias']} — {p['pack']}  {counts}")
+        if p.get("description"):
+            print(f"    {p['description']}")
         if matched:
             print(f"    Matched triggers: {', '.join(matched)}")
         print()
@@ -198,8 +275,9 @@ def show_profile(name: str, as_json: bool = False):
         print(f"Unknown profile '{name}'. Available: {', '.join(PROFILES.keys())}")
         sys.exit(1)
 
+    catalog = build_catalog()
     aliases = PROFILES[name]
-    packs = [p for p in CATALOG if p["alias"] in aliases]
+    packs = [p for p in catalog if p["alias"] in aliases]
 
     if as_json:
         print(
@@ -210,7 +288,9 @@ def show_profile(name: str, as_json: bool = False):
     print(f"Profile: {name}")
     print(f"Auto-installed packs ({len(aliases)}):\n")
     for p in packs:
-        print(f"  {p['alias'].ljust(12)} {p['description']}")
+        counts = _counts_str(p)
+        desc = p.get("description", p["pack"])
+        print(f"  {p['alias'].ljust(14)} {desc}  {counts}")
     print()
 
 

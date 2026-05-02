@@ -1,6 +1,11 @@
 {
-  "pack_name": "opencode-course-skills-pack",
+  "name": "opencode-course-skills-pack",
+  "version": "1.3.1",
+  "description": "课程开发全生命周期 — 规划、提纲、正文、实验、资料、QA/QC、发布",
+  "compatibility": "opencode",
   "skill_count": 15,
+  "command_count": 10,
+  "agent_count": 8,
   "skills": [
     "course-content-authoring",
     "course-development-orchestrator",
@@ -18,19 +23,6 @@
     "reference-document-review",
     "skill-reference-discovery"
   ],
-  "version": "1.3.1",
-  "enhancements": [
-    "Added course project structure standard document",
-    "Added roadmap for extracting future skills from historical conversations",
-    "Expanded course-directory-structure skill with init/audit/reorganize guidance",
-    "Added a project-level AGENTS.md for course development governance, directory policy, quality gates, and release rules",
-    "Added .opencode/commands for high-frequency course development workflows",
-    "Added .opencode/agents for role-based curriculum development execution",
-    "Added COMMANDS-AND-AGENTS-GUIDE.md and updated AGENTS.md/README.md to explain command-agent-skill layering",
-    "Switched helper script usage from direct python invocation to a repo-local uv-managed environment; added pyproject.toml, .python-version, and UV-USAGE.md"
-  ],
-  "command_count": 10,
-  "agent_count": 8,
   "commands": [
     "course-audit",
     "course-content",

@@ -1,8 +1,11 @@
 {
   "name": "petfish-companion-skill",
   "version": "0.2.0",
-  "description": "PEtFiSh常驻伙伴 — 感知/搜索/创建/审计/门禁/挖掘/优化/评测/追踪skill的全生命周期管理。",
+  "description": "PEtFiSh常驻伙伴 — 感知/搜索/创建/审计/门禁/挖掘/优化/评测/追踪skill的全生命周期管理",
   "compatibility": "opencode",
+  "skill_count": 10,
+  "command_count": 1,
+  "agent_count": 0,
   "skills": [
     "petfish-companion",
     "marketplace-connector",
@@ -18,6 +21,7 @@
   "commands": [
     "petfish"
   ],
+  "agents": [],
   "contents": [
     "AGENTS.md",
     ".opencode/skills/petfish-companion/SKILL.md",
