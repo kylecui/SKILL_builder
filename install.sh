@@ -148,7 +148,7 @@ declare -A ALIASES=(
     [companion]="petfish-companion-skill"
     [ppt]="opencode-ppt-skills"
     [init]="project-initializer-skill"
-    [trust]="trustskills"
+    [trust]="trustskills-governance-pack"
 )
 
 # --- Defaults ---

@@ -146,9 +146,9 @@ declare -A ALIASES=(
     [companion]="petfish-companion-skill"
     [ppt]="opencode-ppt-skills"
     [init]="project-initializer-skill"
-    [trust]="trustskills"
+    [trust]="trustskills-governance-pack"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "petfish-companion-skill" "opencode-ppt-skills" "project-initializer-skill" "trustskills")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "petfish-companion-skill" "opencode-ppt-skills" "project-initializer-skill" "trustskills-governance-pack")
 
 # --- Defaults ---
 PACK=""
@@ -220,7 +220,7 @@ if $LIST; then
     echo "  petfish-companion-skill                  (alias: companion)"
     echo "  opencode-ppt-skills                      (alias: ppt)"
     echo "  project-initializer-skill                (alias: init)"
-    echo "  trustskills                              (alias: trust)"
+    echo "  trustskills-governance-pack               (alias: trust)"
     echo ""
     exit 0
 fi

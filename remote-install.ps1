@@ -47,7 +47,7 @@ $Aliases = @{
     "petfish"   = "petfish-style-skill"
     "companion" = "petfish-companion-skill"
     "ppt"       = "opencode-ppt-skills"
-    "trust"     = "trustskills"
+    "trust"     = "trustskills-governance-pack"
 }
 
 $AllPacks = @(
@@ -58,7 +58,7 @@ $AllPacks = @(
     "petfish-style-skill",
     "petfish-companion-skill",
     "opencode-ppt-skills",
-    "trustskills"
+    "trustskills-governance-pack"
 )
 
 $PackDisplayOrder = @(
@@ -69,7 +69,7 @@ $PackDisplayOrder = @(
     @{ Name = "petfish-style-skill"; Alias = "petfish" },
     @{ Name = "petfish-companion-skill"; Alias = "companion" },
     @{ Name = "opencode-ppt-skills"; Alias = "ppt" },
-    @{ Name = "trustskills"; Alias = "trust" }
+    @{ Name = "trustskills-governance-pack"; Alias = "trust" }
 )
 
 # --- Platform path configuration ---

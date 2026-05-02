@@ -89,7 +89,7 @@ $Aliases = @{
     "petfish"  = "petfish-style-skill"
     "companion" = "petfish-companion-skill"
     "ppt"      = "opencode-ppt-skills"
-    "trust"    = "trustskills"
+    "trust"    = "trustskills-governance-pack"
 }
 
 # --- Platform path configuration ---
