@@ -1,0 +1,41 @@
+{
+  "name": "opencode-skill-pack-testcases-usage-docs",
+  "version": "1.0.0",
+  "description": "测试用例与使用文档生成 — test case、覆盖率矩阵、README、API docs",
+  "compatibility": "opencode",
+  "skill_count": 2,
+  "command_count": 0,
+  "agent_count": 0,
+  "skills": [
+    "generate-test-cases",
+    "generate-usage-docs"
+  ],
+  "commands": [],
+  "agents": [],
+  "contents": [
+    "README.md",
+    "INSTALLATION.md",
+    "UV-USAGE.md",
+    ".opencode/skills/generate-test-cases/SKILL.md",
+    ".opencode/skills/generate-test-cases/references/TRACEABILITY_GUIDE.md",
+    ".opencode/skills/generate-test-cases/references/OUTPUT_FORMAT.md",
+    ".opencode/skills/generate-test-cases/references/GOTCHAS.md",
+    ".opencode/skills/generate-test-cases/assets/traceability-matrix-template.md",
+    ".opencode/skills/generate-test-cases/assets/test-case-template.md",
+    ".opencode/skills/generate-test-cases/assets/test-cases.schema.json",
+    ".opencode/skills/generate-test-cases/scripts/project_inventory.py",
+    ".opencode/skills/generate-test-cases/scripts/validate_test_case_json.py",
+    ".opencode/skills/generate-test-cases/evals/evals.json",
+    ".opencode/skills/generate-usage-docs/SKILL.md",
+    ".opencode/skills/generate-usage-docs/references/REFERENCE_GUIDE.md",
+    ".opencode/skills/generate-usage-docs/references/README_GUIDE.md",
+    ".opencode/skills/generate-usage-docs/references/GOTCHAS.md",
+    ".opencode/skills/generate-usage-docs/references/DOCSET_BLUEPRINT.md",
+    ".opencode/skills/generate-usage-docs/assets/readme-template.md",
+    ".opencode/skills/generate-usage-docs/assets/quickstart-template.md",
+    ".opencode/skills/generate-usage-docs/assets/configuration-table-template.md",
+    ".opencode/skills/generate-usage-docs/scripts/project_inventory.py",
+    ".opencode/skills/generate-usage-docs/scripts/validate_docset.py",
+    ".opencode/skills/generate-usage-docs/evals/evals.json"
+  ]
+}

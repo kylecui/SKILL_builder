@@ -1,7 +1,8 @@
 {
   "packs": {
     "opencode-course-skills-pack": {
-      "version": "1.3.1",
+      "description": "课程开发全生命周期 — 规划、提纲、正文、实验、资料、QA/QC、发布",
+      "installed_at": "2026-05-02T14:15:10Z",
       "skills": [
         "course-content-authoring",
         "course-development-orchestrator",
@@ -19,38 +20,80 @@
         "reference-document-review",
         "skill-reference-discovery"
       ],
-      "installed_at": "2026-05-02T08:26:40Z"
+      "version": "1.3.1"
     },
     "opencode-skill-pack-testcases-usage-docs": {
-      "installed_at": "2026-05-02T08:26:41Z"
+      "description": "测试用例与使用文档生成 — test case、覆盖率矩阵、README、API docs",
+      "installed_at": "2026-05-02T14:15:10Z",
+      "skills": [
+        "generate-test-cases",
+        "generate-usage-docs"
+      ],
+      "version": "1.0.0"
     },
     "repo-deploy-ops-skill-pack": {
-      "installed_at": "2026-05-02T08:26:41Z"
+      "description": "部署与运维 — 运行时识别、主机检查、部署执行、验证、运维、回滚、全生命周期管理",
+      "installed_at": "2026-05-02T14:15:10Z",
+      "skills": [
+        "repo-runtime-discovery",
+        "target-host-readiness",
+        "deployment-executor",
+        "deployment-verifier",
+        "service-operations",
+        "incident-rollback",
+        "repo-service-lifecycle"
+      ],
+      "version": "1.0.0"
     },
     "project-initializer-skill": {
-      "description": "Safe project initialization wizard for AI-agent-friendly workspaces",
-      "version": "1.0.0",
+      "description": "项目初始化器 — 创建标准目录结构、自动安装推荐skill、运行post-init wizard",
+      "installed_at": "2026-05-02T14:15:10Z",
       "skills": [
         "project-initializer"
       ],
-      "installed_at": "2026-05-02T08:26:41Z"
+      "version": "1.0.0"
     },
     "petfish-style-skill": {
-      "description": "Opencode skill package for Petfish style rewriting and humanized technical writing.",
-      "version": "3.0.0",
+      "description": "工程写作风格改写 — 去AI味、说人话、中英文紧凑混排",
+      "installed_at": "2026-05-02T14:15:10Z",
       "skills": [
         "petfish-style-rewriter"
       ],
-      "installed_at": "2026-05-02T08:26:41Z"
+      "version": "3.0.0"
     },
     "opencode-ppt-skills": {
-      "description": "OpenCode skills for reading and writing PowerPoint/PPTX decks.",
-      "version": "1.0.0",
+      "description": "PPT设计与制作 — 读取/生成PPTX、Slide QA、视觉渲染",
+      "installed_at": "2026-05-02T14:15:10Z",
       "skills": [
-        ".opencode/skills/ppt-reader",
-        ".opencode/skills/ppt-writer"
+        "ppt-reader",
+        "ppt-writer"
       ],
-      "installed_at": "2026-05-02T08:26:42Z"
+      "version": "1.0.0"
+    },
+    "petfish-companion-skill": {
+      "description": "PEtFiSh常驻伙伴 — 感知/搜索/创建/审计/门禁/挖掘/优化/评测/追踪skill的全生命周期管理",
+      "installed_at": "2026-05-02T14:15:10Z",
+      "skills": [
+        "petfish-companion",
+        "marketplace-connector",
+        "skill-author",
+        "skill-lint",
+        "repo-skill-miner",
+        "skill-security-auditor",
+        "quality-gate",
+        "skill-description-optimizer",
+        "skill-trigger-evaluator",
+        "skill-usage-tracker"
+      ],
+      "version": "0.2.0"
+    },
+    "trustskills-governance-pack": {
+      "description": "Skill安全治理引擎 — 基于行为分析的skill可信度评估、风险评分与治理决策",
+      "installed_at": "2026-05-02T14:15:10Z",
+      "skills": [
+        "skill-trust-governance"
+      ],
+      "version": "0.1.0"
     }
   }
 }

@@ -20,6 +20,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKS_DIR="$SCRIPT_DIR/packs"
+PLATFORMS_JSON="$SCRIPT_DIR/platforms.json"
 
 # --- Merge helpers ---
 
@@ -144,8 +145,10 @@ declare -A ALIASES=(
     [testdocs]="opencode-skill-pack-testcases-usage-docs"
     [deploy]="repo-deploy-ops-skill-pack"
     [petfish]="petfish-style-skill"
+    [companion]="petfish-companion-skill"
     [ppt]="opencode-ppt-skills"
     [init]="project-initializer-skill"
+    [trust]="trustskills-governance-pack"
 )
 
 # --- Defaults ---
@@ -153,6 +156,8 @@ PACK=""
 TARGET="."
 TARGET_EXPLICIT=false
 PLATFORM="opencode"
+PLATFORM_EXPLICIT=false
+DETECT=false
 FORCE=false
 LIST=false
 GLOBAL=false
@@ -160,34 +165,353 @@ GLOBAL=false
 # --- Parse args ---
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --pack)     PACK="$2"; shift 2 ;;
-        --target)   TARGET="$2"; TARGET_EXPLICIT=true; shift 2 ;;
-        --platform) PLATFORM="$2"; shift 2 ;;
+        --pack)
+            [[ $# -ge 2 ]] || { echo "Error: --pack requires a value." >&2; exit 1; }
+            PACK="$2"; shift 2 ;;
+        --target)
+            [[ $# -ge 2 ]] || { echo "Error: --target requires a value." >&2; exit 1; }
+            TARGET="$2"; TARGET_EXPLICIT=true; shift 2 ;;
+        --platform)
+            [[ $# -ge 2 ]] || { echo "Error: --platform requires a value." >&2; exit 1; }
+            PLATFORM="$2"; PLATFORM_EXPLICIT=true; shift 2 ;;
+        --detect)   DETECT=true; shift ;;
         --global)   GLOBAL=true; shift ;;
         --force)    FORCE=true; shift ;;
         --list)     LIST=true; shift ;;
         -h|--help)
-            echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|antigravity|all>] [--global] [--force] [--list]"
-            echo "胖鱼 PEtFiSh Self-adaptive Skill Installer"
-            echo "Aliases: course, testdocs, deploy, petfish, ppt, init"
+            echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|claude|codex|cursor|copilot|windsurf|antigravity|universal|all|primary|ide|cli>] [--detect] [--global] [--force] [--list]"
+            echo "胖鱼 PEtFiSh AI Worker's Companion — Self-adaptive Skill Installer"
+            echo "Aliases: course, testdocs, deploy, petfish, companion, ppt, init, trust"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
 
-# Validate platform
-case "$PLATFORM" in
-    opencode|antigravity|all) ;;
-    *) echo "Error: --platform must be opencode, antigravity, or all" >&2; exit 1 ;;
-esac
-
 if ! $LIST; then
     echo ""
     echo "  ><(((^>  胖鱼 PEtFiSh"
-    echo "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer"
+    echo "  [胖鱼 PEtFiSh] AI Worker's Companion — Self-adaptive Skill Installer"
     echo "  Initialize -> Auto-install -> Work immediately"
     echo ""
 fi
+
+get_platform_field() {
+    local platform_name="$1"
+    local field_path="$2"
+
+    python3 - "$PLATFORMS_JSON" "$platform_name" "$field_path" <<'PY'
+import json
+import sys
+
+registry_file, platform_name, field_path = sys.argv[1:4]
+
+with open(registry_file, 'r', encoding='utf-8') as f:
+    registry = json.load(f)
+
+platform = registry.get('platforms', {}).get(platform_name)
+if platform is None:
+    sys.exit(1)
+
+value = platform
+for part in field_path.split('.'):
+    if not isinstance(value, dict):
+        value = None
+        break
+    value = value.get(part)
+
+if value is None:
+    print("")
+elif isinstance(value, list):
+    print(",".join(str(item) for item in value))
+else:
+    print(value)
+PY
+}
+
+platform_exists() {
+    python3 - "$PLATFORMS_JSON" "$1" <<'PY' >/dev/null
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    registry = json.load(f)
+
+sys.exit(0 if sys.argv[2] in registry.get('platforms', {}) else 1)
+PY
+}
+
+get_platform_group() {
+    local group_name="$1"
+
+    python3 - "$PLATFORMS_JSON" "$group_name" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    registry = json.load(f)
+
+group = registry.get('platform_groups', {}).get(sys.argv[2])
+if group is None:
+    sys.exit(1)
+
+for item in group:
+    print(item)
+PY
+}
+
+get_platforms_for_selection() {
+    local selection="$1"
+
+    if get_platform_group "$selection" >/dev/null 2>&1; then
+        get_platform_group "$selection"
+        return
+    fi
+
+    if platform_exists "$selection"; then
+        printf '%s\n' "$selection"
+        return
+    fi
+
+    echo "Error: unsupported platform or group '$selection'" >&2
+    exit 1
+}
+
+get_detection_order() {
+    python3 - "$PLATFORMS_JSON" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    registry = json.load(f)
+
+ordered = []
+seen = set()
+
+for name in registry.get('platform_groups', {}).get('primary', []):
+    if name not in seen:
+        ordered.append(name)
+        seen.add(name)
+
+for name in registry.get('platforms', {}).keys():
+    if name not in seen:
+        ordered.append(name)
+        seen.add(name)
+
+for name in ordered:
+    print(name)
+PY
+}
+
+expand_home_path() {
+    local path_value="$1"
+
+    if [[ -z "$path_value" ]]; then
+        echo ""
+    elif [[ "$path_value" == "~" ]]; then
+        echo "$HOME"
+    elif [[ "$path_value" == "~/"* ]]; then
+        echo "$HOME/${path_value#~/}"
+    else
+        echo "$path_value"
+    fi
+}
+
+validate_project_relative_path() {
+    local path_value="$1"
+    local field_name="$2"
+
+    [[ -z "$path_value" ]] && return 0
+
+    case "$path_value" in
+        /*|~*|?:/*|?:\\*)
+            echo "Error: invalid $field_name path '$path_value' in platforms.json; project paths must stay relative to target." >&2
+            exit 1
+            ;;
+    esac
+
+    case "/$path_value/" in
+        */../*|*/./../*|*/.././*|*/..//*)
+            echo "Error: invalid $field_name path '$path_value' in platforms.json; parent traversal is not allowed." >&2
+            exit 1
+            ;;
+    esac
+}
+
+get_platform_registry_dir() {
+    local skills_dir="$1"
+
+    if [[ -z "$skills_dir" ]]; then
+        echo ""
+    elif [[ "$skills_dir" == */* ]]; then
+        echo "${skills_dir%/*}"
+    else
+        echo "."
+    fi
+}
+
+detect_platform() {
+    local target_path="$1"
+
+    local platform_name
+    while IFS= read -r platform_name; do
+        [[ -n "$platform_name" ]] || continue
+
+        local markers
+        markers="$(get_platform_field "$platform_name" "detect_markers")"
+        [[ -n "$markers" ]] || continue
+
+        local marker
+        local -a marker_list=()
+        IFS=',' read -r -a marker_list <<< "$markers"
+        for marker in "${marker_list[@]}"; do
+            [[ -n "$marker" ]] || continue
+            if [[ -e "$target_path/$marker" ]]; then
+                printf '%s\n' "$platform_name"
+                return
+            fi
+        done
+    done < <(get_detection_order)
+
+    printf '%s\n' "opencode"
+}
+
+update_translated_instructions() {
+    local source_file="$1"
+    local destination_file="$2"
+    local platform_name="$3"
+    local force_overwrite="$4"
+
+    [[ -f "$source_file" ]] || return 0
+
+    local method
+    method="$(get_platform_field "$platform_name" "instructions_translation.method")"
+    [[ -n "$method" ]] || return 0
+
+    local source_content
+    source_content="$(cat "$source_file")"
+    local prefix=""
+
+    case "$method" in
+        rename_with_header)
+            prefix="<!-- Generated by PEtFiSh from AGENTS.md -->"
+            ;;
+        wrap_as_mdc)
+            prefix="---
+description: \"PEtFiSh project instructions\"
+alwaysApply: true
+---"
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+
+    local begin_marker="<!-- BEGIN pack: translation-$platform_name -->"
+    local end_marker="<!-- END pack: translation-$platform_name -->"
+    local managed_block="${begin_marker}
+${source_content}
+${end_marker}"
+    local translated_content="$managed_block"
+
+    if [[ -n "$prefix" ]]; then
+        translated_content="${prefix}
+${managed_block}"
+    fi
+
+    local parent_dir
+    parent_dir="$(dirname "$destination_file")"
+    if [[ -n "$parent_dir" && "$parent_dir" != "." ]]; then
+        mkdir -p "$parent_dir"
+    fi
+
+    local temp_file
+    temp_file="$(mktemp)"
+    printf '%s\n' "$translated_content" > "$temp_file"
+
+    if [[ ! -f "$destination_file" ]]; then
+        cp "$temp_file" "$destination_file"
+        rm -f "$temp_file"
+        echo "created"
+        return
+    fi
+
+    local existing
+    existing="$(cat "$destination_file")"
+    if echo "$existing" | grep -qF "$begin_marker"; then
+        if ! $force_overwrite; then
+            rm -f "$temp_file"
+            echo "exists"
+            return
+        fi
+        python3 - "$begin_marker" "$end_marker" "$managed_block" "$destination_file" <<'PY'
+import re
+import sys
+
+begin = sys.argv[1]
+end = sys.argv[2]
+replacement = sys.argv[3]
+path = sys.argv[4]
+
+with open(path, 'r', encoding='utf-8') as f:
+    text = f.read()
+
+pattern = re.escape(begin) + r'.*?' + re.escape(end)
+result = re.sub(pattern, replacement, text, flags=re.DOTALL)
+
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(result)
+PY
+        rm -f "$temp_file"
+        echo "updated"
+        return
+    fi
+
+    printf '\n\n%s\n' "$managed_block" >> "$destination_file"
+    rm -f "$temp_file"
+    echo "merged"
+}
+
+convert_opencode_example_to_claude_settings() {
+    local src_file="$1"
+    local dst_file="$2"
+
+    if [[ -f "$dst_file" ]]; then
+        echo "exists"
+        return
+    fi
+
+    local parent_dir
+    parent_dir="$(dirname "$dst_file")"
+    if [[ -n "$parent_dir" && "$parent_dir" != "." ]]; then
+        mkdir -p "$parent_dir"
+    fi
+
+    python3 - "$src_file" "$dst_file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    src = json.load(f)
+
+permissions = {}
+for skill_name, mode in (src.get('permission', {}).get('skill', {}) or {}).items():
+    mode = str(mode)
+    if mode in {'allow', 'ask', 'deny'}:
+        permissions.setdefault(mode, []).append(f'Skill({skill_name})')
+
+dst = {
+    '$schema': 'https://json.schemastore.org/claude-code-settings.json'
+}
+if permissions:
+    dst['permissions'] = permissions
+
+with open(sys.argv[2], 'w', encoding='utf-8') as f:
+    json.dump(dst, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+PY
+
+    echo "created"
+}
 
 resolve_pack() {
     local name="$1"
@@ -202,7 +526,11 @@ resolve_pack() {
 }
 
 get_all_packs() {
-    find "$PACKS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
+    local dir
+    for dir in "$PACKS_DIR"/*; do
+        [[ -d "$dir" ]] || continue
+        basename "$dir"
+    done | sort
 }
 
 show_list() {
@@ -222,53 +550,6 @@ show_list() {
     echo ""
 }
 
-# --- Platform path config ---
-get_skills_dir() {
-    case "$1" in
-        opencode)     echo ".opencode/skills" ;;
-        antigravity)  echo ".agents/skills" ;;
-    esac
-}
-
-get_global_skills_dir() {
-    case "$1" in
-        opencode)     echo "$HOME/.config/opencode/skills" ;;
-        antigravity)  echo "$HOME/.gemini/antigravity/skills" ;;
-    esac
-}
-
-get_global_commands_dir() {
-    case "$1" in
-        opencode)     echo "$HOME/.config/opencode/commands" ;;
-        antigravity)  echo "$HOME/.gemini/antigravity/workflows" ;;
-    esac
-}
-
-get_agents_dir() {
-    case "$1" in
-        opencode)     echo ".opencode/agents" ;;
-        antigravity)  echo ".agents/rules" ;;
-    esac
-}
-
-get_commands_dir() {
-    case "$1" in
-        opencode)     echo ".opencode/commands" ;;
-        antigravity)  echo ".agents/workflows" ;;
-    esac
-}
-
-get_registry_dir() {
-    case "$1" in
-        opencode)     echo ".opencode" ;;
-        antigravity)  echo ".agents" ;;
-    esac
-}
-
-should_merge_json() {
-    [[ "$1" == "opencode" ]]
-}
-
 should_create_gemini() {
     [[ "$1" == "antigravity" ]]
 }
@@ -280,13 +561,23 @@ install_for_platform() {
     local -a packs=("$@")
 
     local skills_dir
-    skills_dir="$(get_skills_dir "$platform_name")"
+    skills_dir="$(get_platform_field "$platform_name" "project.skills_dir")"
+    validate_project_relative_path "$skills_dir" "$platform_name project.skills_dir"
     local agents_dir
-    agents_dir="$(get_agents_dir "$platform_name")"
+    agents_dir="$(get_platform_field "$platform_name" "project.agents_dir")"
+    validate_project_relative_path "$agents_dir" "$platform_name project.agents_dir"
     local commands_dir
-    commands_dir="$(get_commands_dir "$platform_name")"
+    commands_dir="$(get_platform_field "$platform_name" "project.commands_dir")"
+    validate_project_relative_path "$commands_dir" "$platform_name project.commands_dir"
+    local config_file
+    config_file="$(get_platform_field "$platform_name" "project.config_file")"
+    validate_project_relative_path "$config_file" "$platform_name project.config_file"
+    local translation_target
+    translation_target="$(get_platform_field "$platform_name" "instructions_translation.target")"
+    validate_project_relative_path "$translation_target" "$platform_name instructions_translation.target"
     local registry_dir
-    registry_dir="$(get_registry_dir "$platform_name")"
+    registry_dir="$(get_platform_registry_dir "$skills_dir")"
+    validate_project_relative_path "$registry_dir" "$platform_name registry_dir"
 
     echo ""
     echo "[$platform_name] Installing..."
@@ -331,26 +622,34 @@ install_for_platform() {
             fi
         fi
 
-        # --- Merge opencode.json (OpenCode only) ---
-        if should_merge_json "$platform_name"; then
-            if [[ -f "$pack_root/opencode.example.json" ]]; then
-                local dst_oc="$TARGET/opencode.json"
-                result="$(merge_opencode_json "$pack_root/opencode.example.json" "$dst_oc" "$FORCE")"
-                case "$result" in
-                    created) echo "    + opencode.json (created from example)"; ((installed++)) || true ;;
-                    merged)  echo "    + opencode.json (merged)";              ((installed++)) || true ;;
-                esac
-            fi
+        # --- Platform-specific config handling ---
+        if [[ -n "$config_file" && -f "$pack_root/opencode.example.json" ]]; then
+            case "$platform_name" in
+                opencode)
+                    local dst_oc="$TARGET/$config_file"
+                    result="$(merge_opencode_json "$pack_root/opencode.example.json" "$dst_oc" "$FORCE")"
+                    case "$result" in
+                        created) echo "    + $config_file (created from example)"; ((installed++)) || true ;;
+                        merged)  echo "    + $config_file (merged)";              ((installed++)) || true ;;
+                    esac
+                    ;;
+                claude)
+                    local dst_claude="$TARGET/$config_file"
+                    result="$(convert_opencode_example_to_claude_settings "$pack_root/opencode.example.json" "$dst_claude")"
+                    case "$result" in
+                        created) echo "    + $config_file (created from opencode.example.json)"; ((installed++)) || true ;;
+                        exists)  echo "    SKIP $config_file (exists, not auto-merging)"; ((skipped++)) || true ;;
+                    esac
+                    ;;
+                codex)
+                    echo "    - $config_file (skipped: TOML config not auto-translated)"
+                    ;;
+            esac
         fi
-
-        # --- Update installed-packs registry ---
-        local target_registry="$TARGET/$registry_dir"
-        update_installed_packs "$target_registry" "$pack_name" "$pack_root/pack-manifest.json"
-        echo "    + $registry_dir/installed-packs.json (registry updated)"
 
         # --- Copy skills ---
         local src_skills="$pack_opencode/skills"
-        if [[ -d "$src_skills" ]]; then
+        if [[ -n "$skills_dir" && -d "$src_skills" ]]; then
             local target_skills="$TARGET/$skills_dir"
             mkdir -p "$target_skills"
             for item in "$src_skills"/*/; do
@@ -373,7 +672,7 @@ install_for_platform() {
 
         # --- Copy agents ---
         local src_agents="$pack_opencode/agents"
-        if [[ -d "$src_agents" ]]; then
+        if [[ -n "$agents_dir" && -d "$src_agents" ]]; then
             local target_agents="$TARGET/$agents_dir"
             mkdir -p "$target_agents"
             for item in "$src_agents"/*/; do
@@ -396,27 +695,50 @@ install_for_platform() {
 
         # --- Copy commands ---
         local src_commands="$pack_opencode/commands"
-        if [[ -d "$src_commands" ]]; then
+        if [[ -n "$commands_dir" && -d "$src_commands" ]]; then
             local target_commands="$TARGET/$commands_dir"
             mkdir -p "$target_commands"
-            for item in "$src_commands"/*/; do
-                [[ -d "$item" ]] || continue
+            for item in "$src_commands"/*; do
+                [[ -e "$item" ]] || continue
                 local item_name
                 item_name="$(basename "$item")"
                 local dst_item="$target_commands/$item_name"
 
-                if [[ -d "$dst_item" ]] && ! $FORCE; then
+                if [[ -e "$dst_item" ]] && ! $FORCE; then
                     echo "    SKIP commands/$item_name (exists, use --force to overwrite)"
                     ((skipped++)) || true
                     continue
                 fi
-                [[ -d "$dst_item" ]] && rm -rf "$dst_item"
-                cp -r "$item" "$dst_item"
+                if [[ -d "$item" ]]; then
+                    [[ -e "$dst_item" ]] && rm -rf "$dst_item"
+                    cp -r "$item" "$dst_item"
+                else
+                    cp -f "$item" "$dst_item"
+                fi
                 echo "    + commands/$item_name"
                 ((installed++)) || true
             done
         fi
+
+        # --- Update installed-packs registry ---
+        if [[ -n "$registry_dir" ]]; then
+            local target_registry="$TARGET/$registry_dir"
+            update_installed_packs "$target_registry" "$pack_name" "$pack_root/pack-manifest.json"
+            echo "    + $registry_dir/installed-packs.json (registry updated)"
+        fi
     done
+
+    if [[ -n "$translation_target" && "$translation_target" != "AGENTS.md" && -f "$TARGET/AGENTS.md" ]]; then
+        local dst_translated="$TARGET/$translation_target"
+        local translated_result
+        translated_result="$(update_translated_instructions "$TARGET/AGENTS.md" "$dst_translated" "$platform_name" true)"
+        case "$translated_result" in
+            created) echo "    + $translation_target (created)"; ((installed++)) || true ;;
+            merged)  echo "    + $translation_target (merged)";  ((installed++)) || true ;;
+            updated) echo "    + $translation_target (updated)"; ((installed++)) || true ;;
+            exists)  echo "    SKIP $translation_target (managed section exists, use --force to update)"; ((skipped++)) || true ;;
+        esac
+    fi
 
     echo ""
     echo "  [$platform_name] Done: $installed installed, $skipped skipped."
@@ -428,10 +750,22 @@ install_global_for_platform() {
     local -a packs=("$@")
 
     local global_skills_dir
-    global_skills_dir="$(get_global_skills_dir "$platform_name")"
+    global_skills_dir="$(expand_home_path "$(get_platform_field "$platform_name" "global.skills_dir")")"
+    local global_commands_dir
+    global_commands_dir="$(expand_home_path "$(get_platform_field "$platform_name" "global.commands_dir")")"
+
+    if [[ -z "$global_skills_dir" ]]; then
+        echo "WARN: $platform_name does not support global skill installation. Skipping."
+        return
+    fi
 
     echo ""
     echo "[$platform_name] Global install -> $global_skills_dir"
+    if [[ -n "$global_commands_dir" ]]; then
+        echo "  Global commands dir: $global_commands_dir"
+    else
+        echo "  Global commands dir: <not supported>"
+    fi
     echo "  Skills only; skipping AGENTS.md, opencode.json, and registry."
 
     local installed=0
@@ -470,9 +804,7 @@ install_global_for_platform() {
 
         # --- Copy commands to global commands dir ---
         local src_commands="$pack_opencode/commands"
-        if [[ -d "$src_commands" ]]; then
-            local global_commands_dir
-            global_commands_dir="$(get_global_commands_dir "$platform_name")"
+        if [[ -n "$global_commands_dir" && -d "$src_commands" ]]; then
             mkdir -p "$global_commands_dir"
             for item in "$src_commands"/*; do
                 [[ -e "$item" ]] || continue
@@ -507,6 +839,11 @@ if $LIST; then
     exit 0
 fi
 
+if $DETECT && $PLATFORM_EXPLICIT; then
+    echo "Error: --detect cannot be used together with an explicit --platform value." >&2
+    exit 1
+fi
+
 if [[ -z "$PACK" ]]; then
     echo "Error: --pack required. Use --list to see available packs." >&2
     exit 1
@@ -525,16 +862,18 @@ if [[ "$PACK" == "init" || "$PACK" == "project-initializer-skill" ]] && ! $GLOBA
 fi
 
 # --- Resolve target ---
+if $DETECT; then
+    DETECT_TARGET="$(cd "$TARGET" && pwd)"
+    PLATFORM="$(detect_platform "$DETECT_TARGET")"
+    echo "  [detect] Detected platform: $PLATFORM"
+fi
+
 if ! $GLOBAL; then
     TARGET="$(cd "$TARGET" && pwd)"
 fi
 
 declare -a PLATFORMS
-if [[ "$PLATFORM" == "all" ]]; then
-    PLATFORMS=("opencode" "antigravity")
-else
-    PLATFORMS=("$PLATFORM")
-fi
+mapfile -t PLATFORMS < <(get_platforms_for_selection "$PLATFORM")
 
 # --- Install for selected platform(s) ---
 if $GLOBAL; then
