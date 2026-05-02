@@ -2,9 +2,10 @@
 name: petfish
 description: >
   胖鱼PEtFiSh伙伴入口。查看已装skill状态、搜索技能目录、
+  跨市场搜索skill、创建新skill、验证skill质量、
   获取安装建议、检测当前平台。
   Trigger: /petfish [subcommand]
-  Subcommands: status, catalog, suggest, install <alias>, detect
+  Subcommands: status, catalog, suggest, install <alias>, detect, search <keyword>, create <name>, lint [path]
 ---
 
 # /petfish — 胖鱼PEtFiSh Companion
@@ -86,3 +87,55 @@ uv run .opencode/skills/petfish-companion/scripts/detect_platform.py --target .
 2. 技术术语保持紧凑混排（`Docker部署`而非`Docker 部署`）
 3. 不自动执行安装，只提供命令
 4. 遇到错误时给出明确的排查建议
+
+## 新增子命令
+
+### /petfish search \<keyword\>
+
+跨多个来源搜索skill和MCP server：
+
+```bash
+uv run .opencode/skills/marketplace-connector/scripts/marketplace_search.py --query "<keyword>"
+```
+
+搜索按优先级展示结果：
+1. 胖鱼自有仓库匹配
+2. 三方市场（SkillKit/Smithery/Glama）
+3. GitHub高星仓库
+4. GitHub低星仓库
+
+### /petfish create \<name\>
+
+使用skill-author创建新skill：
+
+```bash
+uv run .opencode/skills/skill-author/scripts/generate_skill.py --name "<name>" --type automation --output .opencode/skills/
+```
+
+创建完成后自动运行lint验证：
+
+```bash
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path .opencode/skills/<name>/
+```
+
+支持的模板类型：`automation`（默认）、`workflow`、`knowledge`。
+
+### /petfish lint \[path\]
+
+验证skill质量，默认扫描当前项目所有skill：
+
+```bash
+# 扫描单个skill
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path>
+
+# 递归扫描所有skill
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path .opencode/skills/ --recursive
+
+# 预览修复建议
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path> --fix
+
+# 自动修复
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path> --fix-apply
+```
+
+输出100分制评分和具体问题列表。

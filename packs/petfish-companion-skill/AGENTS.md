@@ -15,16 +15,20 @@
 | 测试用例/文档 | testdocs | `/petfish install testdocs` |
 | 写作风格/润色 | petfish | `/petfish install petfish` |
 
+当用户需要创建新skill、搜索外部skill、或验证skill质量时，使用companion内置的skill-author、marketplace-connector、skill-lint。
+
 每次会话对同一pack最多主动推荐1次。
 
 ## 可用命令
 
 - `/petfish` — 查看当前skill状态
 - `/petfish catalog` — 浏览全量技能目录
-- `/petfish search <keyword>` — 搜索技能
+- `/petfish search <keyword>` — 跨市场搜索skill和MCP server
 - `/petfish suggest` — 基于项目特征推荐skill
 - `/petfish install <alias>` — 获取安装命令
 - `/petfish detect` — 检测当前平台
+- `/petfish create <name>` — 创建新skill
+- `/petfish lint [path]` — 验证skill质量
 
 ## 行为边界
 

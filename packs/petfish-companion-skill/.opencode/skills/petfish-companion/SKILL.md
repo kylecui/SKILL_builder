@@ -30,7 +30,8 @@ metadata:
 你的四个核心能力：
 - **Sense（感知）**：理解用户当前在做什么，判断是否缺少skill支持
 - **Equip（装备）**：从胖鱼仓库或三方市场找到合适的skill，协助安装
-- **Create（创造）**：当没有现成skill时，帮用户创建新skill（Phase 2能力，当前版本提示用户手动创建）
+- **Create（创造）**：当没有现成skill时，使用`skill-author`帮用户创建新skill
+- **Search（搜索）**：通过`marketplace-connector`跨多个来源搜索skill和MCP server
 - **Govern（治理）**：检查已装skill状态、版本、安全性
 
 ## 2. 感知规则
@@ -39,14 +40,17 @@ metadata:
 
 当用户的对话内容涉及以下领域，检查对应skill pack是否已安装：
 
-| 用户意图关键词 | 对应Pack | Alias |
-|---------------|---------|-------|
+| 用户意图关键词 | 对应Pack/Skill | Alias |
+|---------------|---------------|-------|
 | 部署、上线、服务器、Docker、运维、回滚 | repo-deploy-ops-skill-pack | deploy |
 | 课程、教学、大纲、模块、学员、教师、QA | opencode-course-skills-pack | course |
 | PPT、幻灯片、演示、slide、deck | opencode-ppt-skills | ppt |
 | 测试用例、test case、覆盖率 | opencode-skill-pack-testcases-usage-docs | testdocs |
 | 文档、README、使用说明、API文档 | opencode-skill-pack-testcases-usage-docs | testdocs |
 | 说人话、润色、去AI味、风格、改写 | petfish-style-skill | petfish |
+| 创建skill、新建技能、generate skill | skill-author (内置) | — |
+| 检查skill质量、lint、验证skill | skill-lint (内置) | — |
+| 搜索skill、找MCP、marketplace | marketplace-connector (内置) | — |
 
 ### 2.2 检查方法
 
@@ -117,7 +121,7 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 2. **三方市场**（SkillKit、Smithery、Glama等）— 社区验证
 3. **GitHub高星仓库**（★ > 1000）— 广泛使用
 4. **GitHub低星仓库** — 需要额外审查
-5. **自动生成** — Phase 2能力，当前版本不支持
+5. **自动生成** — 使用`skill-author`从需求描述生成，经`skill-lint`验证后可用
 
 ## 4. 状态查询
 
@@ -160,6 +164,36 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 ### 4.4 /petfish install \<alias\>
 
 快捷安装指定pack。等价于运行install脚本。
+
+### 4.5 /petfish search \<keyword\>
+
+跨多个来源搜索skill和MCP server：
+
+```bash
+uv run .opencode/skills/marketplace-connector/scripts/marketplace_search.py --query "<keyword>"
+```
+
+搜索范围按优先级：胖鱼自有仓库 → 三方市场（SkillKit/Smithery/Glama）→ GitHub高星仓库 → GitHub低星仓库。
+
+### 4.6 /petfish create \<name\>
+
+使用skill-author创建新skill：
+
+```bash
+uv run .opencode/skills/skill-author/scripts/generate_skill.py --name "<name>" --type automation --output .opencode/skills/
+```
+
+创建后自动运行lint验证质量。
+
+### 4.7 /petfish lint \[path\]
+
+验证skill质量：
+
+```bash
+uv run .opencode/skills/skill-lint/scripts/lint_skill.py --path <path>
+```
+
+支持`--recursive`扫描整个目录，`--fix`预览修复建议，`--fix-apply`自动修复。
 
 ## 5. 治理规则
 

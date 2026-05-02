@@ -89,6 +89,38 @@
 - **包含skill数**：2
 - **触发关键词**：测试用例、test case、测试矩阵、文档、README、usage docs、API docs
 
+## 内置Skill（companion pack自带）
+
+### marketplace-connector
+- **定位**：跨市场skill搜索
+- **核心能力**：
+  - 统一搜索胖鱼自有仓库、SkillKit、Smithery、Glama、anthropics/skills、GitHub
+  - 按来源优先级排序结果
+  - 支持JSON输出便于自动化
+- **脚本**：`marketplace-connector/scripts/marketplace_search.py`
+- **触发关键词**：搜索skill、找MCP、marketplace、search skills
+
+### skill-author
+- **定位**：skill创建与脚手架
+- **核心能力**：
+  - 从需求描述生成完整skill目录结构
+  - 支持automation/workflow/knowledge三种模板
+  - 生成SKILL.md、references/、scripts/骨架
+  - 符合胖鱼skill规范（name≤64 chars, kebab-case）
+- **脚本**：`skill-author/scripts/generate_skill.py`
+- **触发关键词**：创建skill、新建技能、generate skill、scaffold skill
+
+### skill-lint
+- **定位**：skill质量验证
+- **核心能力**：
+  - 检查SKILL.md结构、frontmatter、description长度
+  - 检查目录规范（references/、scripts/）
+  - 检查脚本安全性（危险命令、hardcoded路径）
+  - 支持递归扫描、自动修复
+  - 100分制评分
+- **脚本**：`skill-lint/scripts/lint_skill.py`
+- **触发关键词**：检查skill、lint skill、验证技能质量、skill quality
+
 ## Profile→Pack映射
 
 | Profile | 自动安装的Pack |
