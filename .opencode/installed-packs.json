@@ -1,0 +1,56 @@
+{
+  "packs": {
+    "opencode-course-skills-pack": {
+      "version": "1.3.1",
+      "skills": [
+        "course-content-authoring",
+        "course-development-orchestrator",
+        "course-directory-structure",
+        "course-lab-design",
+        "course-methodology-playbook",
+        "course-outline-design",
+        "course-quality-assurance",
+        "course-quality-control-reporting",
+        "development-plan-governance",
+        "drawio-course-diagrams",
+        "instructor-reference-materials",
+        "learner-materials",
+        "markdown-course-writing",
+        "reference-document-review",
+        "skill-reference-discovery"
+      ],
+      "installed_at": "2026-05-02T08:26:40Z"
+    },
+    "opencode-skill-pack-testcases-usage-docs": {
+      "installed_at": "2026-05-02T08:26:41Z"
+    },
+    "repo-deploy-ops-skill-pack": {
+      "installed_at": "2026-05-02T08:26:41Z"
+    },
+    "project-initializer-skill": {
+      "description": "Safe project initialization wizard for AI-agent-friendly workspaces",
+      "version": "1.0.0",
+      "skills": [
+        "project-initializer"
+      ],
+      "installed_at": "2026-05-02T08:26:41Z"
+    },
+    "petfish-style-skill": {
+      "description": "Opencode skill package for Petfish style rewriting and humanized technical writing.",
+      "version": "3.0.0",
+      "skills": [
+        "petfish-style-rewriter"
+      ],
+      "installed_at": "2026-05-02T08:26:41Z"
+    },
+    "opencode-ppt-skills": {
+      "description": "OpenCode skills for reading and writing PowerPoint/PPTX decks.",
+      "version": "1.0.0",
+      "skills": [
+        ".opencode/skills/ppt-reader",
+        ".opencode/skills/ppt-writer"
+      ],
+      "installed_at": "2026-05-02T08:26:42Z"
+    }
+  }
+}

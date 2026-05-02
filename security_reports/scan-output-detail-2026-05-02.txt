@@ -1,0 +1,396 @@
+============================================================
+Skill: course-content-authoring
+Description: Use this skill when the user wants to create, revise, expand, compress,
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: course-development-orchestrator
+Description: Use this skill when the user wants to drive a course project end to
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: course-directory-structure
+Description: Use this skill when the user wants to create, reorganize, normalize,
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: course-lab-design
+Description: Use this skill when the user wants to create, modify, review, or operationalize
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: course-methodology-playbook
+Description: Use this skill when the user wants reusable course-development methods,
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: course-outline-design
+Description: Use this skill when the user wants to create, modify, or review a course
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: course-quality-assurance
+Description: Use this skill when the user wants structured course QA: completeness
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: course-quality-control-reporting
+Description: Use this skill when the user wants to turn QA findings into concrete
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: deployment-executor
+Description: 按部署计划执行上线、升级或重部署，优先使用repo已有的Docker/compose/systemd/k8s方式，并在执行前建立回滚点、记录路径与版本、保留变更摘要。Use when you already know how the service should be deployed and need to execute the rollout safely.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.2125
+
+Dimension Scores:
+  shell                0.85
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [many-tools] shell
+
+Risk Surface: shell_execution, high_privilege_tools
+============================================================
+============================================================
+Skill: deployment-verifier
+Description: 对已部署服务做功能性验证，包括health/readiness、核心API smoke test、页面可访问性、日志关键字、端口监听、依赖连接与异常日志排查。Use when you need to prove that a deployment actually works rather than only that a process started.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.3125
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.90
+  shell                0.65
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+  ⚠ [script-network] script_risk
+
+Risk Surface: shell_execution, file_writes, high_privilege_tools, has_scripts
+============================================================
+============================================================
+Skill: development-plan-governance
+Description: Use this skill when the user wants to create, revise, or review a course
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: drawio-course-diagrams
+Description: Use this skill when the user wants course-related diagrams in draw.io
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.1250
+
+Dimension Scores:
+  network              0.50
+
+High Risk Indicators:
+  ⚠ [network-access] network
+
+Risk Surface: network_access
+============================================================
+============================================================
+Skill: generate-test-cases
+Description: Use this skill when the user wants test cases, a test matrix, regression cases, acceptance cases, API tests, CLI tests, UI tests, or automated test ideas derived from the current project's design, interfaces, configuration, or code. It is for grounded synthesis from the current repository, not for generic testing advice.
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: generate-usage-docs
+Description: Use this skill when the user wants grounded usage documentation, README, quick start, configuration docs, API docs, CLI docs, troubleshooting notes, or operator/developer guides derived from the current project's design, interfaces, configuration, or code. It is for synthesizing docs from the current repository, not generic writing help.
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: incident-rollback
+Description: 处理部署失败、上线后故障、健康检查异常、接口错误、日志爆红等事件，优先止血、判断是否回滚、执行回滚并形成incident/rollback记录。Use when a deployment goes wrong or a running service must be stabilized quickly.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.2125
+
+Dimension Scores:
+  shell                0.85
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [many-tools] shell
+
+Risk Surface: shell_execution, high_privilege_tools
+============================================================
+============================================================
+Skill: instructor-reference-materials
+Description: Use this skill when the user wants instructor-only assets such as teaching
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: learner-materials
+Description: Use this skill when the user wants learner-facing course assets such
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: markdown-course-writing
+Description: Use this skill when the user wants polished Markdown output for course
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: petfish-style-rewriter
+Description: Use this skill when the user asks to rewrite, polish, humanize, simplify, de-AI, formalize, or express content in Petfish's writing style. It rewrites Chinese or English technical, academic, business, course, proposal, patent, and email content into a clear, structured, concise, evidence-based, engineering-oriented style. Trigger especially for phrases such as "用我的语言习惯表达", "说人话", "润色", "去AI味", "按我的风格写", or "make it sound human but still professional".
+Version: 3.0.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0900
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+
+High Risk Indicators:
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: file_writes, has_scripts
+============================================================
+============================================================
+Skill: ppt-reader
+Description: Use this skill when the user needs to read, inspect, summarize, audit, compare, or extract structure from PowerPoint/PPTX files, slide decks, presentations, templates, speaker notes, comments, embedded media, slide text, or visual slide images. Prefer this skill for PPTX input even when the final output is a report, outline, meeting summary, course material mapping, or rewrite plan.
+Version: 1.0.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.3100
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          1.00
+  shell                0.60
+
+High Risk Indicators:
+  ⚠ [shell-execution-behavior] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+  ⚠ [script-subprocess] script_risk
+
+Risk Surface: shell_execution, file_writes, has_scripts
+============================================================
+============================================================
+Skill: ppt-writer
+Description: Use this skill when the user wants to create, rewrite, edit, update, restructure, generate, polish, validate, or export a PowerPoint/PPTX deck, slide presentation, pitch deck, courseware, proposal deck, report deck, or template-based presentation. Prefer this skill for PPTX output, including when source material comes from Markdown, notes, PDFs, Word documents, existing PPTX files, outlines, or meeting transcripts.
+Version: 1.0.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.1525
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+  shell                0.25
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: shell_execution, file_writes, has_scripts
+============================================================
+============================================================
+Skill: reference-document-review
+Description: Use this skill when the user provides or mentions reference materials
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: repo-runtime-discovery
+Description: 读取本地仓库或GitHub repo，识别技术栈、构建方式、启动入口、配置与密钥需求、数据库/缓存/MQ依赖，以及适合的部署方法。Use when the user asks to inspect a repo before deployment, infer runtime/build/test/run commands, understand Docker/systemd/compose/k8s signals, or generate a deployment brief.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.2525
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+  shell                0.65
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: shell_execution, file_writes, high_privilege_tools, has_scripts
+============================================================
+============================================================
+Skill: repo-service-lifecycle
+Description: 端到端处理“读取本地repo或GitHub仓库 → 规划部署 → 部署到指定主机 → 做功能验证 → 留下运维与回滚方案”的任务。Use when the user asks to deploy a repository, bring up a service on a host, verify it works, keep it running, upgrade it safely, or perform ongoing DevOps/SRE style operations.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.2125
+
+Dimension Scores:
+  shell                0.85
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [many-tools] shell
+
+Risk Surface: shell_execution, high_privilege_tools
+============================================================
+============================================================
+Skill: service-operations
+Description: 对已上线服务做持续运维，包括版本记录、状态巡检、日志检查、资源观察、证书/磁盘/队列等运行观察点、升级前核对、变更留痕，以及运维交接文档。Use when the service is already running and the user wants ongoing operations, routine SRE work, upgrades, or operational hygiene.
+Version: 0.1.0
+
+Governance: ⚠️ allow_with_ask
+Overall Risk Score: 0.2525
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          0.30
+  shell                0.65
+
+High Risk Indicators:
+  ⚠ [shell-execution-declaration-only] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+
+Risk Surface: shell_execution, file_writes, high_privilege_tools, has_scripts
+============================================================
+============================================================
+Skill: skill-reference-discovery
+Description: Use this skill when the user wants to search GitHub or other public sources
+Version: 0.1.0
+
+Governance: ✅ allow
+Overall Risk Score: 0.0000
+============================================================
+============================================================
+Skill: target-host-readiness
+Description: 检查目标Linux主机是否满足部署前提，包括OS、架构、磁盘、内存、网络、端口占用、docker/systemd/nginx/python/node等运行时、目录可写性，以及部署权限。Use when preparing a server for deployment, validating a target host, checking environment drift, or confirming prerequisites before rollout.
+Version: 0.1.0
+
+Governance: 🔶 sandbox_required
+Overall Risk Score: 0.4100
+
+Dimension Scores:
+  file_write           0.40
+  script_risk          1.00
+  shell                1.00
+
+High Risk Indicators:
+  ⚠ [shell-execution-behavior] shell
+  ⚠ [high-privilege-tools] shell
+  ⚠ [file-writes] file_write
+  ⚠ [script-file-io] script_risk
+  ⚠ [script-subprocess] script_risk
+  ⚠ [many-tools] shell
+
+Risk Surface: shell_execution, file_writes, high_privilege_tools, has_scripts
+============================================================
+
+Scanned 27 skills.

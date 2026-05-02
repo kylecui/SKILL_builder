@@ -1,0 +1,9 @@
+{
+  "permission": {
+    "skill": {
+      "petfish-style-rewriter": "allow",
+      "ppt-reader": "allow",
+      "ppt-writer": "allow"
+    }
+  }
+}
