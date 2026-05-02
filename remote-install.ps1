@@ -1,11 +1,12 @@
-# 胖鱼 PEtFiSh - Remote installer for OpenCode/Antigravity skill packs from GitHub.
-# Usage: & ([scriptblock]::Create((irm <url>))) -Pack course [-Platform opencode|antigravity|all] [-Target .] [-Global]
+# 胖鱼 PEtFiSh - Remote installer for AI coding platform skill packs from GitHub.
+# Usage: & ([scriptblock]::Create((irm <url>))) -Pack course [-Platform opencode] [-Target .] [-Force] [-Global]
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string]$Pack,
+    [string]$Pack,
     [string]$Target = ".",
-    [ValidateSet("opencode", "antigravity", "all")]
+    [ValidateSet("opencode", "claude", "codex", "cursor", "copilot", "windsurf", "antigravity", "universal", "all", "primary", "ide", "cli")]
     [string]$Platform = "opencode",
+    [switch]$Detect,
     [switch]$Force,
     [switch]$List,
     [switch]$Global,
@@ -14,15 +15,15 @@ param(
     [string]$GitHubToken
 )
 
+$ErrorActionPreference = "Stop"
+
 if (-not $List) {
     Write-Host ""
     Write-Host "  ><(((^>  胖鱼 PEtFiSh" -ForegroundColor DarkCyan
-    Write-Host "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer (remote)" -ForegroundColor Cyan
+    Write-Host "  [胖鱼 PEtFiSh] AI Worker's Companion — Self-adaptive Skill Installer (remote)" -ForegroundColor Cyan
     Write-Host "  Initialize -> Auto-install -> Work immediately" -ForegroundColor DarkGray
     Write-Host ""
 }
-
-$ErrorActionPreference = "Stop"
 
 # --- uv availability check ---
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
@@ -30,48 +31,141 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Warning "         Install: https://docs.astral.sh/uv/getting-started/installation/"
 }
 
+$GlobalExplicitlyPassed = $PSBoundParameters.ContainsKey("Global")
+$TargetExplicitlyPassed = $PSBoundParameters.ContainsKey("Target")
+$PlatformExplicitlyPassed = $PSBoundParameters.ContainsKey("Platform")
+
+$PlatformRegistry = $null
+$packsDir = $null
+
+# --- Pack alias registry ---
+$Aliases = @{
+    "course"    = "opencode-course-skills-pack"
+    "testdocs"  = "opencode-skill-pack-testcases-usage-docs"
+    "deploy"    = "repo-deploy-ops-skill-pack"
+    "init"      = "project-initializer-skill"
+    "petfish"   = "petfish-style-skill"
+    "companion" = "petfish-companion-skill"
+    "ppt"       = "opencode-ppt-skills"
+}
+
+$AllPacks = @(
+    "opencode-course-skills-pack",
+    "opencode-skill-pack-testcases-usage-docs",
+    "repo-deploy-ops-skill-pack",
+    "project-initializer-skill",
+    "petfish-style-skill",
+    "petfish-companion-skill",
+    "opencode-ppt-skills"
+)
+
+$PackDisplayOrder = @(
+    @{ Name = "opencode-course-skills-pack"; Alias = "course" },
+    @{ Name = "opencode-skill-pack-testcases-usage-docs"; Alias = "testdocs" },
+    @{ Name = "repo-deploy-ops-skill-pack"; Alias = "deploy" },
+    @{ Name = "project-initializer-skill"; Alias = "init" },
+    @{ Name = "petfish-style-skill"; Alias = "petfish" },
+    @{ Name = "petfish-companion-skill"; Alias = "companion" },
+    @{ Name = "opencode-ppt-skills"; Alias = "ppt" }
+)
+
 # --- Platform path configuration ---
 
-function Get-PlatformConfig([string]$platformName) {
-    switch ($platformName) {
-        "opencode" {
-            return @{
-                SkillsDir   = ".opencode/skills"
-                AgentsDir   = ".opencode/agents"
-                CommandsDir = ".opencode/commands"
-                RegistryDir = ".opencode"
-                MergeJson   = $true
-                GeminiMd    = $false
-            }
-        }
-        "antigravity" {
-            return @{
-                SkillsDir   = ".agents/skills"
-                AgentsDir   = ".agents/rules"
-                CommandsDir = ".agents/workflows"
-                RegistryDir = ".agents"
-                MergeJson   = $false
-                GeminiMd    = $true
-            }
-        }
+function Get-PlatformDefinition([string]$platformName) {
+    $platformProp = $PlatformRegistry.platforms.PSObject.Properties[$platformName]
+    if (-not $platformProp) {
+        Write-Error "Unsupported platform: '$platformName'"
+        exit 1
+    }
+    return $platformProp.Value
+}
+
+function Expand-PlatformPath([string]$pathValue) {
+    if ([string]::IsNullOrWhiteSpace($pathValue)) { return $null }
+    if ($pathValue -eq "~") { return $HOME }
+    if ($pathValue.StartsWith("~/") -or $pathValue.StartsWith('~\')) {
+        return (Join-Path $HOME $pathValue.Substring(2))
+    }
+    return $pathValue
+}
+
+function ConvertTo-PlatformConfig([string]$platformName, $scopeConfig, [switch]$ExpandHome) {
+    if (-not $scopeConfig) { return $null }
+
+    $skillsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.skills_dir } else { $scopeConfig.skills_dir }
+    $commandsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.commands_dir } else { $scopeConfig.commands_dir }
+    $agentsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.agents_dir } else { $scopeConfig.agents_dir }
+    $configFile = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.config_file } else { $scopeConfig.config_file }
+    $instructionsFile = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.instructions_file } else { $scopeConfig.instructions_file }
+    $rulesDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.rules_dir } else { $scopeConfig.rules_dir }
+    $registryDir = if ($skillsDir) { Split-Path -Parent $skillsDir } else { $null }
+
+    $definition = Get-PlatformDefinition $platformName
+
+    return @{
+        SkillsDir               = $skillsDir
+        CommandsDir             = $commandsDir
+        AgentsDir               = $agentsDir
+        ConfigFile              = $configFile
+        InstructionsFile        = $instructionsFile
+        RulesDir                = $rulesDir
+        RegistryDir             = $registryDir
+        DetectMarkers           = @($definition.detect_markers)
+        InstructionsTranslation = $definition.instructions_translation
+        GeminiMd                = ($platformName -eq "antigravity")
     }
 }
 
+function Get-PlatformConfig([string]$platformName) {
+    $definition = Get-PlatformDefinition $platformName
+    return ConvertTo-PlatformConfig $platformName $definition.project
+}
+
 function Get-GlobalPlatformConfig([string]$platformName) {
-    switch ($platformName) {
-        "opencode" {
-            return @{
-                SkillsDir = Join-Path $HOME ".config/opencode/skills"
-                CommandsDir = Join-Path $HOME ".config/opencode/commands"
-            }
-        }
-        "antigravity" {
-            return @{
-                SkillsDir = Join-Path $HOME ".gemini/antigravity/skills"
-                CommandsDir = Join-Path $HOME ".gemini/antigravity/workflows"
+    $definition = Get-PlatformDefinition $platformName
+    return ConvertTo-PlatformConfig $platformName $definition.global -ExpandHome
+}
+
+function Get-PlatformGroup([string]$groupName) {
+    $groupProp = $PlatformRegistry.platform_groups.PSObject.Properties[$groupName]
+    if (-not $groupProp) {
+        Write-Error "Unknown platform group: '$groupName'"
+        exit 1
+    }
+    return @($groupProp.Value)
+}
+
+function Get-PlatformsForSelection([string]$selection) {
+    if ($PlatformRegistry.platform_groups.PSObject.Properties[$selection]) {
+        return Get-PlatformGroup $selection
+    }
+    return @($selection)
+}
+
+function Get-DetectionOrder {
+    $ordered = New-Object System.Collections.Generic.List[string]
+    foreach ($name in (Get-PlatformGroup "primary")) {
+        if (-not $ordered.Contains($name)) { [void]$ordered.Add($name) }
+    }
+    foreach ($prop in $PlatformRegistry.platforms.PSObject.Properties) {
+        if (-not $ordered.Contains($prop.Name)) { [void]$ordered.Add($prop.Name) }
+    }
+    return @($ordered)
+}
+
+function Get-DetectedPlatform([string]$targetPath) {
+    foreach ($platformName in (Get-DetectionOrder)) {
+        $cfg = Get-PlatformConfig $platformName
+        foreach ($marker in $cfg.DetectMarkers) {
+            if (-not [string]::IsNullOrWhiteSpace($marker)) {
+                $markerPath = Join-Path $targetPath $marker
+                if (Test-Path $markerPath) {
+                    return $platformName
+                }
             }
         }
     }
+    return "opencode"
 }
 
 # --- Merge helpers ---
@@ -148,9 +242,9 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
 
     if (Test-Path $manifestFile) {
         $m = Get-Content $manifestFile -Raw | ConvertFrom-Json
-        if ($m.PSObject.Properties['version'])     { $entry.version = $m.version }
-        if ($m.PSObject.Properties['skills'])       { $entry.skills = $m.skills }
-        if ($m.PSObject.Properties['description'])  { $entry.description = $m.description }
+        if ($m.PSObject.Properties['version']) { $entry.version = $m.version }
+        if ($m.PSObject.Properties['skills']) { $entry.skills = $m.skills }
+        if ($m.PSObject.Properties['description']) { $entry.description = $m.description }
     }
 
     if (-not (Test-Path $registryDir)) {
@@ -173,36 +267,336 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
     $reg | ConvertTo-Json -Depth 10 | Set-Content $regFile
 }
 
-# --- Pack alias registry ---
-$Aliases = @{
-    "course"   = "opencode-course-skills-pack"
-    "testdocs" = "opencode-skill-pack-testcases-usage-docs"
-    "deploy"   = "repo-deploy-ops-skill-pack"
-    "init"     = "project-initializer-skill"
-    "petfish"  = "petfish-style-skill"
-    "ppt"      = "opencode-ppt-skills"
-}
-$AllPacks = @("opencode-course-skills-pack", "opencode-skill-pack-testcases-usage-docs", "repo-deploy-ops-skill-pack", "project-initializer-skill", "petfish-style-skill", "opencode-ppt-skills")
+function Update-TranslatedInstructions([string]$sourceFile, [string]$destinationFile, [string]$platformName) {
+    $cfg = Get-PlatformConfig $platformName
+    $translation = $cfg.InstructionsTranslation
+    if (-not $translation) { return $null }
+    if (-not (Test-Path $sourceFile)) { return $null }
 
-# --- List mode ---
-if ($List) {
-    Write-Host "`nAvailable packs:" -ForegroundColor Cyan
-    Write-Host ("-" * 60)
-    Write-Host "  opencode-course-skills-pack (alias: course)"
-    Write-Host "  opencode-skill-pack-testcases-usage-docs (alias: testdocs)"
-    Write-Host "  repo-deploy-ops-skill-pack (alias: deploy)"
-    Write-Host "  project-initializer-skill (alias: init)"
-    Write-Host "  petfish-style-skill (alias: petfish)"
-    Write-Host "  opencode-ppt-skills (alias: ppt)"
-    Write-Host ""
-    return
+    $sourceContent = (Get-Content $sourceFile -Raw).TrimEnd()
+    $translatedContent = $sourceContent
+
+    switch ($translation.method) {
+        "rename_with_header" {
+            $translatedContent = "<!-- Generated by PEtFiSh from AGENTS.md -->`n$sourceContent"
+        }
+        "wrap_as_mdc" {
+            $translatedContent = "---`ndescription: `"PEtFiSh project instructions`"`nalwaysApply: true`n---`n$sourceContent"
+        }
+        default {
+            return $null
+        }
+    }
+
+    $parentDir = Split-Path -Parent $destinationFile
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
+
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    try {
+        Set-Content -Path $tempFile -Value $translatedContent -NoNewline
+        return Merge-AgentsMd $tempFile $destinationFile "translation-$platformName" -ForceOverwrite:$true
+    }
+    finally {
+        if (Test-Path $tempFile) {
+            Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
+        }
+    }
 }
 
-# --- Resolve pack names ---
+function Convert-OpencodeExampleToClaudeSettings([string]$srcFile, [string]$dstFile) {
+    if (Test-Path $dstFile) {
+        return "exists"
+    }
+
+    $src = Get-Content $srcFile -Raw | ConvertFrom-Json
+    $permissions = [ordered]@{}
+
+    if ($src.PSObject.Properties["permission"] -and $src.permission.PSObject.Properties["skill"]) {
+        foreach ($skill in $src.permission.skill.PSObject.Properties) {
+            $mode = "$($skill.Value)"
+            if ($mode -in @("allow", "ask", "deny")) {
+                if (-not $permissions.ContainsKey($mode)) {
+                    $permissions[$mode] = @()
+                }
+                $permissions[$mode] += "Skill($($skill.Name))"
+            }
+        }
+    }
+
+    $dst = [ordered]@{
+        '$schema' = "https://json.schemastore.org/claude-code-settings.json"
+    }
+    if ($permissions.Count -gt 0) {
+        $dst.permissions = $permissions
+    }
+
+    $parentDir = Split-Path -Parent $dstFile
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
+
+    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile
+    return "created"
+}
+
 function Resolve-PackName([string]$name) {
     if ($Aliases.ContainsKey($name)) { return $Aliases[$name] }
     if ($AllPacks -contains $name) { return $name }
-    Write-Error "Unknown pack: '$name'. Available: course, testdocs, deploy, init, petfish, ppt, all"
+    Write-Error "Unknown pack: '$name'. Use -List to see available packs, or -Pack all."
+    exit 1
+}
+
+function Show-PackList {
+    Write-Host "`nAvailable packs:" -ForegroundColor Cyan
+    Write-Host ("-" * 60)
+    foreach ($packInfo in $PackDisplayOrder) {
+        Write-Host "  $($packInfo.Name) (alias: $($packInfo.Alias))"
+    }
+    Write-Host ""
+}
+
+function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$targetPath, [switch]$ForceInstall) {
+    $cfg = Get-PlatformConfig $platformName
+    $targetSkills = if ($cfg.SkillsDir) { Join-Path $targetPath $cfg.SkillsDir } else { $null }
+    $targetAgents = if ($cfg.AgentsDir) { Join-Path $targetPath $cfg.AgentsDir } else { $null }
+    $targetCommands = if ($cfg.CommandsDir) { Join-Path $targetPath $cfg.CommandsDir } else { $null }
+    $targetRegistry = if ($cfg.RegistryDir) { Join-Path $targetPath $cfg.RegistryDir } else { $null }
+
+    Write-Host "`n[$platformName] Installing..." -ForegroundColor Magenta
+
+    $script:installed = 0
+    $script:skipped = 0
+
+    foreach ($packName in $packs) {
+        $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
+        if (-not (Test-Path $packOpencode)) {
+            Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
+            continue
+        }
+
+        Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
+
+        $packRoot = Join-Path $packsDir $packName
+
+        $agentsMd = Join-Path $packRoot "AGENTS.md"
+        if (Test-Path $agentsMd) {
+            $dstAgents = Join-Path $targetPath "AGENTS.md"
+            $result = Merge-AgentsMd $agentsMd $dstAgents $packName -ForceOverwrite:$ForceInstall
+            switch ($result) {
+                "created" { Write-Host "    + AGENTS.md (created)" -ForegroundColor DarkGreen; $script:installed++ }
+                "merged"  { Write-Host "    + AGENTS.md (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                "updated" { Write-Host "    + AGENTS.md (updated)" -ForegroundColor DarkGreen; $script:installed++ }
+                "exists"  { Write-Warning "    SKIP AGENTS.md (pack section exists, use -Force to update)"; $script:skipped++ }
+            }
+
+            $translation = $cfg.InstructionsTranslation
+            $translationTarget = if ($translation -and $translation.PSObject.Properties["target"]) { $translation.target } else { $cfg.InstructionsFile }
+            if ($translation -and $translationTarget -and $translationTarget -ne "AGENTS.md") {
+                $dstTranslated = Join-Path $targetPath $translationTarget
+                $translatedResult = Update-TranslatedInstructions $dstAgents $dstTranslated $platformName
+                $translatedLabel = $translationTarget
+                switch ($translatedResult) {
+                    "created" { Write-Host "    + $translatedLabel (created)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "merged"  { Write-Host "    + $translatedLabel (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "updated" { Write-Host "    + $translatedLabel (updated)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "exists"  { Write-Warning "    SKIP $translatedLabel (managed section exists, use -Force to update)"; $script:skipped++ }
+                }
+            }
+
+            if ($cfg.GeminiMd) {
+                $dstGemini = Join-Path $targetPath "GEMINI.md"
+                $geminiResult = Merge-AgentsMd $agentsMd $dstGemini $packName -ForceOverwrite:$ForceInstall
+                switch ($geminiResult) {
+                    "created" { Write-Host "    + GEMINI.md (created)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "merged"  { Write-Host "    + GEMINI.md (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "updated" { Write-Host "    + GEMINI.md (updated)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "exists"  { Write-Warning "    SKIP GEMINI.md (pack section exists, use -Force to update)"; $script:skipped++ }
+                }
+            }
+        }
+
+        if ($cfg.ConfigFile) {
+            $ocExample = Join-Path $packRoot "opencode.example.json"
+            if (Test-Path $ocExample) {
+                switch ($platformName) {
+                    "opencode" {
+                        $dstConfig = Join-Path $targetPath $cfg.ConfigFile
+                        $configResult = Merge-OpencodeJson $ocExample $dstConfig -ForceOverwrite:$ForceInstall
+                        switch ($configResult) {
+                            "created" { Write-Host "    + $($cfg.ConfigFile) (created from example)" -ForegroundColor DarkGreen; $script:installed++ }
+                            "merged"  { Write-Host "    + $($cfg.ConfigFile) (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                        }
+                    }
+                    "claude" {
+                        $dstConfig = Join-Path $targetPath $cfg.ConfigFile
+                        $configResult = Convert-OpencodeExampleToClaudeSettings $ocExample $dstConfig
+                        switch ($configResult) {
+                            "created" { Write-Host "    + $($cfg.ConfigFile) (created from opencode.example.json)" -ForegroundColor DarkGreen; $script:installed++ }
+                            "exists"  { Write-Warning "    SKIP $($cfg.ConfigFile) (exists, not auto-merging)"; $script:skipped++ }
+                        }
+                    }
+                    "codex" {
+                        Write-Host "    - $($cfg.ConfigFile) (skipped: TOML config not auto-translated)" -ForegroundColor DarkGray
+                    }
+                }
+            }
+        }
+
+        $manifestFile = Join-Path $packRoot "pack-manifest.json"
+        Update-InstalledPacks $targetRegistry $packName $manifestFile
+        Write-Host "    + $($cfg.RegistryDir)/installed-packs.json (registry updated)" -ForegroundColor DarkGreen
+
+        $srcSkills = Join-Path $packOpencode "skills"
+        if ($targetSkills -and (Test-Path $srcSkills)) {
+            if (-not (Test-Path $targetSkills)) {
+                New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
+            }
+            foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
+                $dstItem = Join-Path $targetSkills $item.Name
+                if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                    Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
+                    $script:skipped++
+                    continue
+                }
+                if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
+                $script:installed++
+            }
+        }
+
+        $srcAgents = Join-Path $packOpencode "agents"
+        if ($targetAgents -and (Test-Path $srcAgents)) {
+            if (-not (Test-Path $targetAgents)) {
+                New-Item -ItemType Directory -Path $targetAgents -Force | Out-Null
+            }
+            foreach ($item in (Get-ChildItem -Path $srcAgents -Directory)) {
+                $dstItem = Join-Path $targetAgents $item.Name
+                if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                    Write-Warning "    SKIP agents/$($item.Name) (exists, use -Force to overwrite)"
+                    $script:skipped++
+                    continue
+                }
+                if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                Write-Host "    + agents/$($item.Name)" -ForegroundColor DarkGreen
+                $script:installed++
+            }
+        }
+
+        $srcCommands = Join-Path $packOpencode "commands"
+        if ($targetCommands -and (Test-Path $srcCommands)) {
+            if (-not (Test-Path $targetCommands)) {
+                New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
+            }
+            foreach ($item in (Get-ChildItem -Path $srcCommands -Directory)) {
+                $dstItem = Join-Path $targetCommands $item.Name
+                if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                    Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
+                    $script:skipped++
+                    continue
+                }
+                if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
+                $script:installed++
+            }
+        }
+    }
+
+    Write-Host "`n  [$platformName] Done: $($script:installed) installed, $($script:skipped) skipped." -ForegroundColor Cyan
+}
+
+function Install-GlobalForPlatform([string]$platformName, [string[]]$packs, [switch]$ForceInstall) {
+    $cfg = Get-GlobalPlatformConfig $platformName
+    $targetSkills = $cfg.SkillsDir
+
+    if (-not $targetSkills) {
+        Write-Warning "$platformName does not support global skill installation. Skipping."
+        return
+    }
+
+    if (-not (Test-Path $targetSkills)) {
+        New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
+    }
+
+    Write-Host "`n[$platformName] Global installing..." -ForegroundColor Magenta
+    Write-Host "  Global skills dir: $targetSkills" -ForegroundColor DarkCyan
+    Write-Host "  Global commands dir: $(if ($cfg.CommandsDir) { $cfg.CommandsDir } else { '<not supported>' })" -ForegroundColor DarkCyan
+
+    $script:installed = 0
+    $script:skipped = 0
+
+    foreach ($packName in $packs) {
+        $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
+        if (-not (Test-Path $packOpencode)) {
+            Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
+            continue
+        }
+
+        Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
+
+        $srcSkills = Join-Path $packOpencode "skills"
+        if (-not (Test-Path $srcSkills)) {
+            Write-Warning "Pack '$packName' has no .opencode/skills/ directory. Skipping."
+            continue
+        }
+
+        foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
+            $dstItem = Join-Path $targetSkills $item.Name
+            if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
+                $script:skipped++
+                continue
+            }
+            if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+            Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+            Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
+            $script:installed++
+        }
+
+        $srcCommands = Join-Path $packOpencode "commands"
+        if ($cfg.CommandsDir -and (Test-Path $srcCommands)) {
+            $targetCommands = $cfg.CommandsDir
+            if (-not (Test-Path $targetCommands)) {
+                New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
+            }
+            foreach ($item in (Get-ChildItem -Path $srcCommands)) {
+                $dstItem = Join-Path $targetCommands $item.Name
+                if ((Test-Path $dstItem) -and -not $ForceInstall) {
+                    Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
+                    $script:skipped++
+                    continue
+                }
+                if ($item.PSIsContainer) {
+                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
+                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
+                } else {
+                    Copy-Item -Path $item.FullName -Destination $dstItem -Force
+                }
+                Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
+                $script:installed++
+            }
+        }
+    }
+
+    Write-Host "`n  [$platformName] Done: $($script:installed) installed, $($script:skipped) skipped." -ForegroundColor Cyan
+}
+
+if ($List) {
+    Show-PackList
+    exit 0
+}
+
+if ($Detect -and $PlatformExplicitlyPassed) {
+    Write-Error "-Detect cannot be used together with an explicit -Platform value."
+    exit 1
+}
+
+if (-not $Pack) {
+    Write-Error "Missing -Pack parameter. Use -List to see available packs, or -Pack all."
     exit 1
 }
 
@@ -212,256 +606,71 @@ $packsToInstall = if ($Pack -eq "all") {
     @(Resolve-PackName $Pack)
 }
 
-if (@($packsToInstall).Count -eq 1 -and @($packsToInstall)[0] -eq "project-initializer-skill" -and -not $Global -and $Target -eq ".") {
+if (($Pack -eq "init" -or $Pack -eq "project-initializer-skill") -and -not $GlobalExplicitlyPassed -and -not $TargetExplicitlyPassed) {
     $Global = $true
-    Write-Host "  [info] init pack defaults to global install. Use -Target to install locally."
+    Write-Host "  [info] init pack defaults to global install. Use -Target to install locally." -ForegroundColor DarkCyan
 }
 
-# --- Resolve target ---
-if (-not $Global) {
-    $Target = (Resolve-Path $Target -ErrorAction Stop).Path
-}
-
-# --- Download & extract tarball ---
 $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "skill_builder_$(Get-Random)"
 New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 
 try {
+    $platformsUrl = "https://raw.githubusercontent.com/$Repo/$Branch/platforms.json"
+    $platformsPath = Join-Path $tmpDir "platforms.json"
     $tarballUrl = "https://github.com/$Repo/archive/refs/heads/$Branch.zip"
     $zipPath = Join-Path $tmpDir "repo.zip"
 
     Write-Host "Downloading $Repo@$Branch..." -ForegroundColor Cyan
-    $webParams = @{ Uri = $tarballUrl; OutFile = $zipPath }
+
+    $platformsRequest = @{ Uri = $platformsUrl; OutFile = $platformsPath }
+    $zipRequest = @{ Uri = $tarballUrl; OutFile = $zipPath }
     if ($GitHubToken) {
-        $webParams.Headers = @{ Authorization = "token $GitHubToken" }
+        $headers = @{ Authorization = "token $GitHubToken" }
+        $platformsRequest.Headers = $headers
+        $zipRequest.Headers = $headers
     }
-    Invoke-WebRequest @webParams -UseBasicParsing
+
+    Invoke-WebRequest @platformsRequest -UseBasicParsing
+    Invoke-WebRequest @zipRequest -UseBasicParsing
+
+    $PlatformRegistry = Get-Content $platformsPath -Raw | ConvertFrom-Json
 
     Write-Host "Extracting..."
     Expand-Archive -Path $zipPath -DestinationPath $tmpDir -Force
 
-    # GitHub zips extract into <repo>-<branch>/
-    $extractDir = Get-ChildItem -Path $tmpDir -Directory | Where-Object { $_.Name -ne "repo" } | Select-Object -First 1
+    $extractDir = Get-ChildItem -Path $tmpDir -Directory | Where-Object { $_.FullName -ne $tmpDir } | Select-Object -First 1
     if (-not $extractDir) {
         Write-Error "Failed to extract archive"
         exit 1
     }
 
     $packsDir = Join-Path $extractDir.FullName "packs"
-
-    function Install-GlobalForPlatform([string]$platformName) {
-        $cfg = Get-GlobalPlatformConfig $platformName
-        $globalSkillsDir = $cfg.SkillsDir
-
-        Write-Host "`n[$platformName] Installing globally..." -ForegroundColor Magenta
-        Write-Host "  Global skills path: $globalSkillsDir" -ForegroundColor Cyan
-
-        $installed = 0
-        $skipped = 0
-
-        if (-not (Test-Path $globalSkillsDir)) {
-            New-Item -ItemType Directory -Path $globalSkillsDir -Force | Out-Null
-        }
-
-        foreach ($packName in $packsToInstall) {
-            $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
-            if (-not (Test-Path $packOpencode)) {
-                Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
-                continue
-            }
-
-            $srcSkills = Join-Path $packOpencode "skills"
-            if (-not (Test-Path $srcSkills)) {
-                Write-Warning "Pack '$packName' has no .opencode/skills/ directory. Skipping."
-                continue
-            }
-
-            Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
-
-            foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
-                $dstItem = Join-Path $globalSkillsDir $item.Name
-                if ((Test-Path $dstItem) -and -not $Force) {
-                    Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
-                    $skipped++
-                    continue
-                }
-                if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
-                Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
-                $installed++
-            }
-
-            # --- Copy commands to global commands dir ---
-            $srcCommands = Join-Path $packOpencode "commands"
-            if (Test-Path $srcCommands) {
-                $targetCommands = $cfg.CommandsDir
-                if (-not (Test-Path $targetCommands)) {
-                    New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
-                }
-                foreach ($item in (Get-ChildItem -Path $srcCommands)) {
-                    $dstItem = Join-Path $targetCommands $item.Name
-                    if ((Test-Path $dstItem) -and -not $Force) {
-                        Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
-                        $skipped++
-                        continue
-                    }
-                    if ($item.PSIsContainer) {
-                        if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
-                        Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                    } else {
-                        Copy-Item -Path $item.FullName -Destination $dstItem -Force
-                    }
-                    Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
-                    $installed++
-                }
-            }
-        }
-
-        Write-Host "`n  [$platformName] Global install done: $installed installed, $skipped skipped." -ForegroundColor Cyan
+    if (-not (Test-Path $packsDir)) {
+        Write-Error "Downloaded repository does not contain a packs/ directory."
+        exit 1
     }
 
-    # --- Install function for a given platform ---
-    function Install-ForPlatform([string]$platformName) {
-        $cfg = Get-PlatformConfig $platformName
-
-        Write-Host "`n[$platformName] Installing..." -ForegroundColor Magenta
-
-        $installed = 0
-        $skipped = 0
-
-        foreach ($packName in $packsToInstall) {
-            $packOpencode = Join-Path (Join-Path $packsDir $packName) ".opencode"
-            if (-not (Test-Path $packOpencode)) {
-                Write-Warning "Pack '$packName' has no .opencode/ directory. Skipping."
-                continue
-            }
-
-            Write-Host "`n  Installing pack: $packName" -ForegroundColor Green
-
-            $packRoot = Join-Path $packsDir $packName
-
-            # --- Merge AGENTS.md ---
-            $agentsMd = Join-Path $packRoot "AGENTS.md"
-            if (Test-Path $agentsMd) {
-                $dstAgents = Join-Path $Target "AGENTS.md"
-                $result = Merge-AgentsMd $agentsMd $dstAgents $packName -ForceOverwrite:$Force
-                switch ($result) {
-                    "created"  { Write-Host "    + AGENTS.md (created)" -ForegroundColor DarkGreen; $installed++ }
-                    "merged"   { Write-Host "    + AGENTS.md (merged)" -ForegroundColor DarkGreen; $installed++ }
-                    "updated"  { Write-Host "    + AGENTS.md (updated)" -ForegroundColor DarkGreen; $installed++ }
-                    "exists"   { Write-Warning "    SKIP AGENTS.md (pack section exists, use -Force to update)"; $skipped++ }
-                }
-
-                # Antigravity: also create/merge GEMINI.md
-                if ($cfg.GeminiMd) {
-                    $dstGemini = Join-Path $Target "GEMINI.md"
-                    $result = Merge-AgentsMd $agentsMd $dstGemini $packName -ForceOverwrite:$Force
-                    switch ($result) {
-                        "created"  { Write-Host "    + GEMINI.md (created)" -ForegroundColor DarkGreen; $installed++ }
-                        "merged"   { Write-Host "    + GEMINI.md (merged)" -ForegroundColor DarkGreen; $installed++ }
-                        "updated"  { Write-Host "    + GEMINI.md (updated)" -ForegroundColor DarkGreen; $installed++ }
-                        "exists"   { Write-Warning "    SKIP GEMINI.md (pack section exists, use -Force to update)"; $skipped++ }
-                    }
-                }
-            }
-
-            # --- Merge opencode.json (OpenCode only) ---
-            if ($cfg.MergeJson) {
-                $ocExample = Join-Path $packRoot "opencode.example.json"
-                if (Test-Path $ocExample) {
-                    $dstOc = Join-Path $Target "opencode.json"
-                    $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$Force
-                    switch ($result) {
-                        "created" { Write-Host "    + opencode.json (created from example)" -ForegroundColor DarkGreen; $installed++ }
-                        "merged"  { Write-Host "    + opencode.json (merged)" -ForegroundColor DarkGreen; $installed++ }
-                    }
-                }
-            }
-
-            # --- Update installed-packs registry ---
-            $targetRegistry = Join-Path $Target $cfg.RegistryDir
-            $manifestFile = Join-Path $packRoot "pack-manifest.json"
-            Update-InstalledPacks $targetRegistry $packName $manifestFile
-            Write-Host "    + $($cfg.RegistryDir)/installed-packs.json (registry updated)" -ForegroundColor DarkGreen
-
-            # --- Copy skills ---
-            $srcSkills = Join-Path $packOpencode "skills"
-            if (Test-Path $srcSkills) {
-                $targetSkills = Join-Path $Target $cfg.SkillsDir
-                if (-not (Test-Path $targetSkills)) {
-                    New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
-                }
-                foreach ($item in (Get-ChildItem -Path $srcSkills -Directory)) {
-                    $dstItem = Join-Path $targetSkills $item.Name
-                    if ((Test-Path $dstItem) -and -not $Force) {
-                        Write-Warning "    SKIP skills/$($item.Name) (exists, use -Force to overwrite)"
-                        $skipped++
-                        continue
-                    }
-                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
-                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                    Write-Host "    + skills/$($item.Name)" -ForegroundColor DarkGreen
-                    $installed++
-                }
-            }
-
-            # --- Copy agents ---
-            $srcAgents = Join-Path $packOpencode "agents"
-            if (Test-Path $srcAgents) {
-                $targetAgents = Join-Path $Target $cfg.AgentsDir
-                if (-not (Test-Path $targetAgents)) {
-                    New-Item -ItemType Directory -Path $targetAgents -Force | Out-Null
-                }
-                foreach ($item in (Get-ChildItem -Path $srcAgents -Directory)) {
-                    $dstItem = Join-Path $targetAgents $item.Name
-                    if ((Test-Path $dstItem) -and -not $Force) {
-                        Write-Warning "    SKIP agents/$($item.Name) (exists, use -Force to overwrite)"
-                        $skipped++
-                        continue
-                    }
-                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
-                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                    Write-Host "    + agents/$($item.Name)" -ForegroundColor DarkGreen
-                    $installed++
-                }
-            }
-
-            # --- Copy commands ---
-            $srcCommands = Join-Path $packOpencode "commands"
-            if (Test-Path $srcCommands) {
-                $targetCommands = Join-Path $Target $cfg.CommandsDir
-                if (-not (Test-Path $targetCommands)) {
-                    New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
-                }
-                foreach ($item in (Get-ChildItem -Path $srcCommands -Directory)) {
-                    $dstItem = Join-Path $targetCommands $item.Name
-                    if ((Test-Path $dstItem) -and -not $Force) {
-                        Write-Warning "    SKIP commands/$($item.Name) (exists, use -Force to overwrite)"
-                        $skipped++
-                        continue
-                    }
-                    if (Test-Path $dstItem) { Remove-Item -Path $dstItem -Recurse -Force }
-                    Copy-Item -Path $item.FullName -Destination $dstItem -Recurse
-                    Write-Host "    + commands/$($item.Name)" -ForegroundColor DarkGreen
-                    $installed++
-                }
-            }
-        }
-
-        Write-Host "`n  [$platformName] Done: $installed installed, $skipped skipped." -ForegroundColor Cyan
+    if ($Detect) {
+        $detectTarget = (Resolve-Path $Target -ErrorAction Stop).Path
+        $Platform = Get-DetectedPlatform $detectTarget
+        Write-Host "  [detect] Detected platform: $Platform" -ForegroundColor DarkCyan
     }
 
-    # --- Install for selected platform(s) ---
-    $platforms = if ($Platform -eq "all") { @("opencode", "antigravity") } else { @($Platform) }
+    if (-not $Global) {
+        $Target = (Resolve-Path $Target -ErrorAction Stop).Path
+    }
 
+    $platforms = Get-PlatformsForSelection $Platform
     foreach ($p in $platforms) {
         if ($Global) {
-            Install-GlobalForPlatform $p
+            Install-GlobalForPlatform $p $packsToInstall -ForceInstall:$Force
         } else {
-            Install-ForPlatform $p
+            Install-ForPlatform $p $packsToInstall $Target -ForceInstall:$Force
         }
     }
-
-} finally {
-    Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
+}
+finally {
+    if (Test-Path $tmpDir) {
+        Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
+    }
 }

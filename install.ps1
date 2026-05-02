@@ -1,21 +1,30 @@
 <#
 .SYNOPSIS
-    胖鱼 PEtFiSh - Install OpenCode/Antigravity skill packs.
+    胖鱼 PEtFiSh - Install skill packs for supported AI coding platforms.
 
 .DESCRIPTION
     Copies skills, commands, and agents from one or more skill packs
-    into the target project or global skills directories. Supports OpenCode and Antigravity platforms.
+    into the target project or global skills directories. Supports OpenCode,
+    Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Antigravity,
+    and Universal platform layouts.
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs, deploy, init, petfish, ppt
+    Aliases: course, testdocs, deploy, init, petfish, companion, ppt
     Full names also accepted.
 
 .PARAMETER Target
     Path to the target project. Defaults to current directory.
 
 .PARAMETER Platform
-    Target platform: opencode, antigravity, or all. Defaults to opencode.
+    Target platform: opencode, claude, codex, cursor, copilot, windsurf,
+    antigravity, universal, or platform groups all/primary/ide/cli.
+    Defaults to opencode.
+
+.PARAMETER Detect
+    Auto-detect the current platform from the target directory using
+    platform markers from platforms.json. Defaults to opencode if no
+    markers are found.
 
 .PARAMETER Force
     Overwrite existing files without prompting.
@@ -31,14 +40,16 @@
     .\install.ps1 -Pack all -Platform antigravity
     .\install.ps1 -Pack petfish -Platform all
     .\install.ps1 -Pack init -Global
+    .\install.ps1 -Pack petfish -Detect
     .\install.ps1 -List
 #>
 [CmdletBinding()]
 param(
     [string]$Pack,
     [string]$Target = ".",
-    [ValidateSet("opencode", "antigravity", "all")]
+    [ValidateSet("opencode", "claude", "codex", "cursor", "copilot", "windsurf", "antigravity", "universal", "all", "primary", "ide", "cli")]
     [string]$Platform = "opencode",
+    [switch]$Detect,
     [switch]$Global,
     [switch]$Force,
     [switch]$List
@@ -55,17 +66,19 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 if (-not $List) {
     Write-Host ""
     Write-Host "  ><(((^>  胖鱼 PEtFiSh" -ForegroundColor DarkCyan
-    Write-Host "  [胖鱼 PEtFiSh] Self-adaptive Skill Installer" -ForegroundColor Cyan
+    Write-Host "  [胖鱼 PEtFiSh] AI Worker's Companion — Self-adaptive Skill Installer" -ForegroundColor Cyan
     Write-Host "  Initialize -> Auto-install -> Work immediately" -ForegroundColor DarkGray
     Write-Host ""
 }
 
 $GlobalExplicitlyPassed = $PSBoundParameters.ContainsKey("Global")
 $TargetExplicitlyPassed = $PSBoundParameters.ContainsKey("Target")
+$PlatformExplicitlyPassed = $PSBoundParameters.ContainsKey("Platform")
 
 # Resolve script root (works whether run directly or piped)
 $ScriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { $PWD.Path }
 $PacksDir = Join-Path $ScriptRoot "packs"
+$PlatformRegistry = Get-Content (Join-Path $ScriptRoot "platforms.json") -Raw | ConvertFrom-Json
 
 # Pack alias registry
 $Aliases = @{
@@ -74,51 +87,107 @@ $Aliases = @{
     "deploy"   = "repo-deploy-ops-skill-pack"
     "init"     = "project-initializer-skill"
     "petfish"  = "petfish-style-skill"
+    "companion" = "petfish-companion-skill"
     "ppt"      = "opencode-ppt-skills"
 }
 
 # --- Platform path configuration ---
 
-function Get-PlatformConfig([string]$platformName) {
-    switch ($platformName) {
-        "opencode" {
-            return @{
-                SkillsDir   = ".opencode/skills"
-                AgentsDir   = ".opencode/agents"
-                CommandsDir = ".opencode/commands"
-                RegistryDir = ".opencode"
-                MergeJson   = $true
-                GeminiMd    = $false
-            }
-        }
-        "antigravity" {
-            return @{
-                SkillsDir   = ".agents/skills"
-                AgentsDir   = ".agents/rules"
-                CommandsDir = ".agents/workflows"
-                RegistryDir = ".agents"
-                MergeJson   = $false
-                GeminiMd    = $true
-            }
-        }
+function Get-PlatformDefinition([string]$platformName) {
+    $platformProp = $PlatformRegistry.platforms.PSObject.Properties[$platformName]
+    if (-not $platformProp) {
+        Write-Error "Unsupported platform: '$platformName'"
+        exit 1
+    }
+    return $platformProp.Value
+}
+
+function Expand-PlatformPath([string]$pathValue) {
+    if ([string]::IsNullOrWhiteSpace($pathValue)) { return $null }
+    if ($pathValue -eq "~") { return $HOME }
+    if ($pathValue.StartsWith("~/") -or $pathValue.StartsWith('~\')) {
+        return (Join-Path $HOME $pathValue.Substring(2))
+    }
+    return $pathValue
+}
+
+function ConvertTo-PlatformConfig([string]$platformName, $scopeConfig, [switch]$ExpandHome) {
+    if (-not $scopeConfig) { return $null }
+
+    $skillsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.skills_dir } else { $scopeConfig.skills_dir }
+    $commandsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.commands_dir } else { $scopeConfig.commands_dir }
+    $agentsDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.agents_dir } else { $scopeConfig.agents_dir }
+    $configFile = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.config_file } else { $scopeConfig.config_file }
+    $instructionsFile = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.instructions_file } else { $scopeConfig.instructions_file }
+    $rulesDir = if ($ExpandHome) { Expand-PlatformPath $scopeConfig.rules_dir } else { $scopeConfig.rules_dir }
+    $registryDir = if ($skillsDir) { Split-Path -Parent $skillsDir } else { $null }
+
+    $definition = Get-PlatformDefinition $platformName
+
+    return @{
+        SkillsDir               = $skillsDir
+        CommandsDir             = $commandsDir
+        AgentsDir               = $agentsDir
+        ConfigFile              = $configFile
+        InstructionsFile        = $instructionsFile
+        RulesDir                = $rulesDir
+        RegistryDir             = $registryDir
+        DetectMarkers           = @($definition.detect_markers)
+        InstructionsTranslation = $definition.instructions_translation
+        GeminiMd                = ($platformName -eq "antigravity")
     }
 }
 
+function Get-PlatformConfig([string]$platformName) {
+    $definition = Get-PlatformDefinition $platformName
+    return ConvertTo-PlatformConfig $platformName $definition.project
+}
+
 function Get-GlobalPlatformConfig([string]$platformName) {
-    switch ($platformName) {
-        "opencode" {
-            return @{
-                SkillsDir = Join-Path $HOME ".config/opencode/skills"
-                CommandsDir = Join-Path $HOME ".config/opencode/commands"
-            }
-        }
-        "antigravity" {
-            return @{
-                SkillsDir = Join-Path $HOME ".gemini/antigravity/skills"
-                CommandsDir = Join-Path $HOME ".gemini/antigravity/workflows"
+    $definition = Get-PlatformDefinition $platformName
+    return ConvertTo-PlatformConfig $platformName $definition.global -ExpandHome
+}
+
+function Get-PlatformGroup([string]$groupName) {
+    $groupProp = $PlatformRegistry.platform_groups.PSObject.Properties[$groupName]
+    if (-not $groupProp) {
+        Write-Error "Unknown platform group: '$groupName'"
+        exit 1
+    }
+    return @($groupProp.Value)
+}
+
+function Get-PlatformsForSelection([string]$selection) {
+    if ($PlatformRegistry.platform_groups.PSObject.Properties[$selection]) {
+        return Get-PlatformGroup $selection
+    }
+    return @($selection)
+}
+
+function Get-DetectionOrder {
+    $ordered = New-Object System.Collections.Generic.List[string]
+    foreach ($name in (Get-PlatformGroup "primary")) {
+        if (-not $ordered.Contains($name)) { [void]$ordered.Add($name) }
+    }
+    foreach ($prop in $PlatformRegistry.platforms.PSObject.Properties) {
+        if (-not $ordered.Contains($prop.Name)) { [void]$ordered.Add($prop.Name) }
+    }
+    return @($ordered)
+}
+
+function Get-DetectedPlatform([string]$targetPath) {
+    foreach ($platformName in (Get-DetectionOrder)) {
+        $cfg = Get-PlatformConfig $platformName
+        foreach ($marker in $cfg.DetectMarkers) {
+            if (-not [string]::IsNullOrWhiteSpace($marker)) {
+                $markerPath = Join-Path $targetPath $marker
+                if (Test-Path $markerPath) {
+                    return $platformName
+                }
             }
         }
     }
+    return "opencode"
 }
 
 # --- Merge helpers ---
@@ -221,6 +290,80 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
     $reg | ConvertTo-Json -Depth 10 | Set-Content $regFile
 }
 
+function Update-TranslatedInstructions([string]$sourceFile, [string]$destinationFile, [string]$platformName) {
+    $cfg = Get-PlatformConfig $platformName
+    $translation = $cfg.InstructionsTranslation
+    if (-not $translation) { return $null }
+    if (-not (Test-Path $sourceFile)) { return $null }
+
+    $sourceContent = (Get-Content $sourceFile -Raw).TrimEnd()
+    $translatedContent = $sourceContent
+
+    switch ($translation.method) {
+        "rename_with_header" {
+            $translatedContent = "<!-- Generated by PEtFiSh from AGENTS.md -->`n$sourceContent"
+        }
+        "wrap_as_mdc" {
+            $translatedContent = "---`ndescription: `"PEtFiSh project instructions`"`nalwaysApply: true`n---`n$sourceContent"
+        }
+        default {
+            return $null
+        }
+    }
+
+    $parentDir = Split-Path -Parent $destinationFile
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
+
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    try {
+        Set-Content -Path $tempFile -Value $translatedContent -NoNewline
+        return Merge-AgentsMd $tempFile $destinationFile "translation-$platformName" -ForceOverwrite:$true
+    }
+    finally {
+        if (Test-Path $tempFile) {
+            Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Convert-OpencodeExampleToClaudeSettings([string]$srcFile, [string]$dstFile) {
+    if (Test-Path $dstFile) {
+        return "exists"
+    }
+
+    $src = Get-Content $srcFile -Raw | ConvertFrom-Json
+    $permissions = [ordered]@{}
+
+    if ($src.PSObject.Properties["permission"] -and $src.permission.PSObject.Properties["skill"]) {
+        foreach ($skill in $src.permission.skill.PSObject.Properties) {
+            $mode = "$($skill.Value)"
+            if ($mode -in @("allow", "ask", "deny")) {
+                if (-not $permissions.ContainsKey($mode)) {
+                    $permissions[$mode] = @()
+                }
+                $permissions[$mode] += "Skill($($skill.Name))"
+            }
+        }
+    }
+
+    $dst = [ordered]@{
+        '$schema' = "https://json.schemastore.org/claude-code-settings.json"
+    }
+    if ($permissions.Count -gt 0) {
+        $dst.permissions = $permissions
+    }
+
+    $parentDir = Split-Path -Parent $dstFile
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
+
+    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile
+    return "created"
+}
+
 function Get-PackFullName([string]$name) {
     if ($Aliases.ContainsKey($name)) { return $Aliases[$name] }
     if (Test-Path (Join-Path $PacksDir $name)) { return $name }
@@ -255,10 +398,10 @@ function Show-PackList {
 
 function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$targetPath, [switch]$ForceInstall) {
     $cfg = Get-PlatformConfig $platformName
-    $targetSkills   = Join-Path $targetPath $cfg.SkillsDir
-    $targetAgents   = Join-Path $targetPath $cfg.AgentsDir
-    $targetCommands = Join-Path $targetPath $cfg.CommandsDir
-    $targetRegistry = Join-Path $targetPath $cfg.RegistryDir
+    $targetSkills = if ($cfg.SkillsDir) { Join-Path $targetPath $cfg.SkillsDir } else { $null }
+    $targetAgents = if ($cfg.AgentsDir) { Join-Path $targetPath $cfg.AgentsDir } else { $null }
+    $targetCommands = if ($cfg.CommandsDir) { Join-Path $targetPath $cfg.CommandsDir } else { $null }
+    $targetRegistry = if ($cfg.RegistryDir) { Join-Path $targetPath $cfg.RegistryDir } else { $null }
 
     Write-Host "`n[$platformName] Installing..." -ForegroundColor Magenta
 
@@ -288,6 +431,20 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
                 "exists"   { Write-Warning "    SKIP AGENTS.md (pack section exists, use -Force to update)"; $script:skipped++ }
             }
 
+            $translation = $cfg.InstructionsTranslation
+            $translationTarget = if ($translation -and $translation.PSObject.Properties["target"]) { $translation.target } else { $cfg.InstructionsFile }
+            if ($translation -and $translationTarget -and $translationTarget -ne "AGENTS.md") {
+                $dstTranslated = Join-Path $targetPath $translationTarget
+                $translatedResult = Update-TranslatedInstructions $dstAgents $dstTranslated $platformName
+                $translatedLabel = $translationTarget
+                switch ($translatedResult) {
+                    "created"  { Write-Host "    + $translatedLabel (created)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "merged"   { Write-Host "    + $translatedLabel (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "updated"  { Write-Host "    + $translatedLabel (updated)" -ForegroundColor DarkGreen; $script:installed++ }
+                    "exists"   { Write-Warning "    SKIP $translatedLabel (managed section exists, use -Force to update)"; $script:skipped++ }
+                }
+            }
+
             # Antigravity: also create/merge GEMINI.md
             if ($cfg.GeminiMd) {
                 $dstGemini = Join-Path $targetPath "GEMINI.md"
@@ -301,15 +458,30 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
             }
         }
 
-        # --- Merge opencode.json (OpenCode only) ---
-        if ($cfg.MergeJson) {
+        # --- Platform-specific config handling ---
+        if ($cfg.ConfigFile) {
             $ocExample = Join-Path $packRoot "opencode.example.json"
             if (Test-Path $ocExample) {
-                $dstOc = Join-Path $targetPath "opencode.json"
-                $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$ForceInstall
-                switch ($result) {
-                    "created" { Write-Host "    + opencode.json (created from example)" -ForegroundColor DarkGreen; $script:installed++ }
-                    "merged"  { Write-Host "    + opencode.json (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                switch ($platformName) {
+                    "opencode" {
+                        $dstOc = Join-Path $targetPath $cfg.ConfigFile
+                        $result = Merge-OpencodeJson $ocExample $dstOc -ForceOverwrite:$ForceInstall
+                        switch ($result) {
+                            "created" { Write-Host "    + $($cfg.ConfigFile) (created from example)" -ForegroundColor DarkGreen; $script:installed++ }
+                            "merged"  { Write-Host "    + $($cfg.ConfigFile) (merged)" -ForegroundColor DarkGreen; $script:installed++ }
+                        }
+                    }
+                    "claude" {
+                        $dstClaude = Join-Path $targetPath $cfg.ConfigFile
+                        $result = Convert-OpencodeExampleToClaudeSettings $ocExample $dstClaude
+                        switch ($result) {
+                            "created" { Write-Host "    + $($cfg.ConfigFile) (created from opencode.example.json)" -ForegroundColor DarkGreen; $script:installed++ }
+                            "exists"  { Write-Warning "    SKIP $($cfg.ConfigFile) (exists, not auto-merging)"; $script:skipped++ }
+                        }
+                    }
+                    "codex" {
+                        Write-Host "    - $($cfg.ConfigFile) (skipped: TOML config not auto-translated)" -ForegroundColor DarkGray
+                    }
                 }
             }
         }
@@ -321,7 +493,7 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
 
         # --- Copy skills ---
         $srcSkills = Join-Path $packOpencode "skills"
-        if (Test-Path $srcSkills) {
+        if ($targetSkills -and (Test-Path $srcSkills)) {
             if (-not (Test-Path $targetSkills)) {
                 New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
             }
@@ -341,7 +513,7 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
 
         # --- Copy agents → platform agents dir ---
         $srcAgents = Join-Path $packOpencode "agents"
-        if (Test-Path $srcAgents) {
+        if ($targetAgents -and (Test-Path $srcAgents)) {
             if (-not (Test-Path $targetAgents)) {
                 New-Item -ItemType Directory -Path $targetAgents -Force | Out-Null
             }
@@ -361,7 +533,7 @@ function Install-ForPlatform([string]$platformName, [string[]]$packs, [string]$t
 
         # --- Copy commands → platform commands dir ---
         $srcCommands = Join-Path $packOpencode "commands"
-        if (Test-Path $srcCommands) {
+        if ($targetCommands -and (Test-Path $srcCommands)) {
             if (-not (Test-Path $targetCommands)) {
                 New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
             }
@@ -387,13 +559,18 @@ function Install-GlobalForPlatform([string]$platformName, [string[]]$packs, [swi
     $cfg = Get-GlobalPlatformConfig $platformName
     $targetSkills = $cfg.SkillsDir
 
+    if (-not $targetSkills) {
+        Write-Warning "$platformName does not support global skill installation. Skipping."
+        return
+    }
+
     if (-not (Test-Path $targetSkills)) {
         New-Item -ItemType Directory -Path $targetSkills -Force | Out-Null
     }
 
     Write-Host "`n[$platformName] Global installing..." -ForegroundColor Magenta
     Write-Host "  Global skills dir: $targetSkills" -ForegroundColor DarkCyan
-    Write-Host "  Global commands dir: $($cfg.CommandsDir)" -ForegroundColor DarkCyan
+    Write-Host "  Global commands dir: $(if ($cfg.CommandsDir) { $cfg.CommandsDir } else { '<not supported>' })" -ForegroundColor DarkCyan
 
     $script:installed = 0
     $script:skipped = 0
@@ -428,7 +605,7 @@ function Install-GlobalForPlatform([string]$platformName, [string[]]$packs, [swi
 
         # --- Copy commands to global commands dir ---
         $srcCommands = Join-Path $packOpencode "commands"
-        if (Test-Path $srcCommands) {
+        if ($cfg.CommandsDir -and (Test-Path $srcCommands)) {
             $targetCommands = $cfg.CommandsDir
             if (-not (Test-Path $targetCommands)) {
                 New-Item -ItemType Directory -Path $targetCommands -Force | Out-Null
@@ -461,6 +638,11 @@ if ($List) {
     exit 0
 }
 
+if ($Detect -and $PlatformExplicitlyPassed) {
+    Write-Error "-Detect cannot be used together with an explicit -Platform value."
+    exit 1
+}
+
 if (-not $Pack) {
     Write-Error "Missing -Pack parameter. Use -List to see available packs, or -Pack all."
     exit 1
@@ -479,12 +661,18 @@ if (($Pack -eq "init" -or $Pack -eq "project-initializer-skill") -and -not $Glob
 }
 
 # --- Resolve target ---
+if ($Detect) {
+    $detectTarget = (Resolve-Path $Target -ErrorAction Stop).Path
+    $Platform = Get-DetectedPlatform $detectTarget
+    Write-Host "  [detect] Detected platform: $Platform" -ForegroundColor DarkCyan
+}
+
 if (-not $Global) {
     $Target = (Resolve-Path $Target -ErrorAction Stop).Path
 }
 
 # --- Install for selected platform(s) ---
-$platforms = if ($Platform -eq "all") { @("opencode", "antigravity") } else { @($Platform) }
+$platforms = Get-PlatformsForSelection $Platform
 
 foreach ($p in $platforms) {
     if ($Global) {
