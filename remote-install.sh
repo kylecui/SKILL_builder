@@ -21,6 +21,7 @@ fi
 
 REPO="kylecui/SKILL_builder"
 BRANCH="master"
+BRANCH_OVERRIDE=false
 
 # --- Merge helpers ---
 
@@ -178,7 +179,7 @@ while [[ $# -gt 0 ]]; do
         --global)   GLOBAL=true; shift ;;
         --list)     LIST=true; shift ;;
         --repo)     REPO="$2"; shift 2 ;;
-        --branch)   BRANCH="$2"; shift 2 ;;
+        --branch)   BRANCH="$2"; BRANCH_OVERRIDE=true; shift 2 ;;
         -h|--help)
             echo "Usage: curl ... | bash -s -- --pack <name|all> [--target <path>] [--platform <platform>] [--detect] [--force] [--global]"
             echo ""
@@ -199,6 +200,30 @@ while [[ $# -gt 0 ]]; do
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
+
+# --- Auto-detect latest release tag if BRANCH not explicitly set ---
+if ! $BRANCH_OVERRIDE; then
+    latest_tag=""
+    
+    # Construct API URL and optional auth header
+    api_url="https://api.github.com/repos/$REPO/releases/latest"
+    auth_header_api=""
+    if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+        auth_header_api="Authorization: token $GITHUB_TOKEN"
+    fi
+    
+    # Fetch latest release tag with error suppression
+    if [[ -n "$auth_header_api" ]]; then
+        latest_tag=$(curl -fsSL -H "$auth_header_api" "$api_url" 2>/dev/null | grep -o '"tag_name"[^,]*' | head -1 | sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' 2>/dev/null)
+    else
+        latest_tag=$(curl -fsSL "$api_url" 2>/dev/null | grep -o '"tag_name"[^,]*' | head -1 | sed 's/"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' 2>/dev/null)
+    fi
+    
+    # Use detected tag if valid, otherwise fall back to master
+    if [[ -n "$latest_tag" && "$latest_tag" != "null" ]]; then
+        BRANCH="$latest_tag"
+    fi
+fi
 
 if ! $LIST; then
     echo ""

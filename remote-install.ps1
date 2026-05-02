@@ -17,6 +17,20 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Auto-resolve latest release tag if -Branch not explicitly passed
+if (-not $PSBoundParameters.ContainsKey('Branch')) {
+    try {
+        $apiUrl = "https://api.github.com/repos/$Repo/releases/latest"
+        $headers = if ($GitHubToken) { @{ Authorization = "token $GitHubToken" } } else { @{} }
+        $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers -ErrorAction Stop
+        if ($response -and $response.tag_name) {
+            $Branch = $response.tag_name
+        }
+    } catch {
+        # Silently fall back to "master" on any error
+    }
+}
+
 if (-not $List) {
     Write-Host ""
     Write-Host "  ><(((^>  胖鱼 PEtFiSh" -ForegroundColor DarkCyan
@@ -618,10 +632,15 @@ $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) "skill_builder_$(Get-Rando
 New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 
 try {
-    $platformsUrl = "https://raw.githubusercontent.com/$Repo/$Branch/platforms.json"
-    $platformsPath = Join-Path $tmpDir "platforms.json"
-    $tarballUrl = "https://github.com/$Repo/archive/refs/heads/$Branch.zip"
-    $zipPath = Join-Path $tmpDir "repo.zip"
+     $platformsUrl = "https://raw.githubusercontent.com/$Repo/$Branch/platforms.json"
+     $platformsPath = Join-Path $tmpDir "platforms.json"
+     
+     # Determine if $Branch is a tag (semver-like) or a branch name
+     # Tags typically start with 'v' or match semver pattern (e.g., v1.0.0, 1.2.3)
+     $isTag = $Branch -match '^v?\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?(\+[a-zA-Z0-9]+)?$'
+     $archivePath = if ($isTag) { "archive/refs/tags/$Branch.zip" } else { "archive/refs/heads/$Branch.zip" }
+     $tarballUrl = "https://github.com/$Repo/$archivePath"
+     $zipPath = Join-Path $tmpDir "repo.zip"
 
     Write-Host "Downloading $Repo@$Branch..." -ForegroundColor Cyan
 

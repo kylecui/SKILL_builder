@@ -1,3 +1,46 @@
+# PEtFiSh 项目开发纪律
+
+本节定义项目级开发规则，所有agent和人工操作必须遵守。
+
+---
+
+## Release纪律（强制）
+
+本项目使用GitHub Release作为用户安装的稳定来源。install脚本默认自动获取latest release tag。
+
+### 发布流程
+
+1. **所有开发在`dev`分支进行**
+2. **功能完成后**：创建PR从`dev`合并到`master`
+3. **PR合并到master后，必须立即创建GitHub Release**：
+   - Tag格式：`vX.Y.Z`（语义化版本号）
+   - 使用`gh release create vX.Y.Z --target master --title "vX.Y.Z - 简要描述" --notes "变更说明"`
+   - Release notes必须包含本次变更的要点
+4. **不允许**：master上有未打tag的合并。每次合并master = 一次release。
+
+### 版本号规则
+
+- **Major (X)**：破坏性变更（pack结构、install脚本接口变化）
+- **Minor (Y)**：新功能（新pack、新skill、新平台支持）
+- **Patch (Z)**：修复（bug fix、文档修正、小优化）
+
+### Install脚本与Release的关系
+
+- 用户通过固定URL下载install脚本（指向master分支）
+- install脚本启动后，**自动查询GitHub API获取latest release tag**
+- 实际下载的pack内容来自release tag对应的代码快照
+- 如果API查询失败，fallback到master分支
+- 用户可通过`--branch`参数覆盖自动检测
+
+### 禁止事项
+
+- 禁止合并到master后不打release tag
+- 禁止使用非语义化的tag名称
+- 禁止删除已发布的release（除非有安全漏洞）
+- 禁止在release中包含未经测试的破坏性变更
+
+---
+
 <!-- BEGIN pack: opencode-course-skills-pack -->
 # 课程开发项目AGENTS.md
 
