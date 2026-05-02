@@ -54,6 +54,9 @@ metadata:
 | 分析仓库、挖掘skill、mine repo | repo-skill-miner (内置) | — |
 | 安全审计、security audit、skill安全 | skill-security-auditor (内置) | — |
 | 发布门禁、quality gate、publish skill | quality-gate (内置) | — |
+| 优化描述、improve trigger、description | skill-description-optimizer (内置) | — |
+| 测试触发、trigger accuracy、evaluate | skill-trigger-evaluator (内置) | — |
+| 使用统计、usage stats、skill analytics | skill-usage-tracker (内置) | — |
 
 ### 2.2 检查方法
 
@@ -227,6 +230,34 @@ uv run .opencode/skills/quality-gate/scripts/run_gate.py --path <skill-path>
 ```
 
 支持`--recursive`批量门禁。输出PASS/CONDITIONAL/FAIL决策。
+
+### 4.11 /petfish optimize \<path\>
+
+分析skill描述质量并建议优化：
+
+```bash
+uv run .opencode/skills/skill-description-optimizer/scripts/optimize_description.py --path <skill-path> --suggest --verbose
+```
+
+可用`--siblings`指定兄弟skill目录做重叠分析。
+
+### 4.12 /petfish eval \<path\>
+
+测试skill触发准确率：
+
+```bash
+uv run .opencode/skills/skill-trigger-evaluator/scripts/evaluate_triggers.py --path <skill-path> --verbose
+```
+
+可用`--test-file`提供自定义测试集，`--siblings`做跨触发冲突检测。
+
+### 4.13 /petfish stats
+
+查看当前项目的skill使用统计：
+
+```bash
+uv run .opencode/skills/skill-usage-tracker/scripts/track_usage.py --action report --target .
+```
 
 ## 5. 治理规则
 

@@ -154,6 +154,35 @@
 - **脚本**：`quality-gate/scripts/run_gate.py`
 - **触发关键词**：发布门禁、quality gate、publish skill、can this skill be released
 
+### skill-description-optimizer
+- **定位**：skill描述优化
+- **核心能力**：
+  - 分析描述长度、触发短语密度、特异性
+  - 与兄弟skill做关键词重叠检测
+  - 生成优化建议和改进版描述
+- **脚本**：`skill-description-optimizer/scripts/optimize_description.py`
+- **触发关键词**：优化描述、improve trigger、fix description、description too broad
+
+### skill-trigger-evaluator
+- **定位**：skill触发准确率测试
+- **核心能力**：
+  - 正向/反向查询集测试
+  - 计算触发通过率、误触率、漏触率
+  - 跨触发冲突检测（兄弟skill间）
+  - 支持自定义测试集和自动生成
+- **脚本**：`skill-trigger-evaluator/scripts/evaluate_triggers.py`
+- **触发关键词**：测试触发、trigger accuracy、evaluate triggers、false positive
+
+### skill-usage-tracker
+- **定位**：skill使用追踪与分析
+- **核心能力**：
+  - 记录skill激活事件和用户反馈
+  - 生成使用统计报告（Top skills、休眠skill、满意率）
+  - 数据驱动的推荐优化
+  - 本地存储、隐私安全
+- **脚本**：`skill-usage-tracker/scripts/track_usage.py`
+- **触发关键词**：使用统计、usage stats、skill analytics、which skills popular
+
 ## Profile→Pack映射
 
 | Profile | 自动安装的Pack |

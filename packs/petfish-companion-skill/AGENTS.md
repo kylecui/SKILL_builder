@@ -32,6 +32,9 @@
 - `/petfish mine <repo>` — 从仓库挖掘候选skill
 - `/petfish audit <path>` — skill安全审计
 - `/petfish gate <path>` — 运行发布门禁（lint+security→决策）
+- `/petfish optimize <path>` — 分析并优化skill描述
+- `/petfish eval <path>` — 测试skill触发准确率
+- `/petfish stats` — 查看skill使用统计
 
 ## 行为边界
 

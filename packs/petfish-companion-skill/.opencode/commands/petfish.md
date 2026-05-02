@@ -5,7 +5,7 @@ description: >
   跨市场搜索skill、创建新skill、验证skill质量、
   获取安装建议、检测当前平台。
   Trigger: /petfish [subcommand]
-  Subcommands: status, catalog, suggest, install <alias>, detect, search <keyword>, create <name>, lint [path], mine <repo>, audit <path>, gate <path>
+  Subcommands: status, catalog, suggest, install <alias>, detect, search <keyword>, create <name>, lint [path], mine <repo>, audit <path>, gate <path>, optimize <path>, eval <path>, stats
 ---
 
 # /petfish — 胖鱼PEtFiSh Companion
@@ -184,3 +184,37 @@ uv run .opencode/skills/quality-gate/scripts/run_gate.py --path .opencode/skills
 ```
 
 输出PASS/CONDITIONAL/FAIL决策及详细报告。
+
+### /petfish optimize \<path\>
+
+分析skill描述质量并建议优化：
+
+```bash
+uv run .opencode/skills/skill-description-optimizer/scripts/optimize_description.py --path <skill-path> --suggest --verbose
+
+# 含兄弟skill重叠分析
+uv run .opencode/skills/skill-description-optimizer/scripts/optimize_description.py --path <skill-path> --siblings .opencode/skills/ --suggest
+```
+
+### /petfish eval \<path\>
+
+测试skill触发准确率：
+
+```bash
+# 自动生成测试集
+uv run .opencode/skills/skill-trigger-evaluator/scripts/evaluate_triggers.py --path <skill-path> --verbose
+
+# 使用自定义测试集
+uv run .opencode/skills/skill-trigger-evaluator/scripts/evaluate_triggers.py --path <skill-path> --test-file tests.json
+
+# 含跨触发冲突检测
+uv run .opencode/skills/skill-trigger-evaluator/scripts/evaluate_triggers.py --path <skill-path> --siblings .opencode/skills/
+```
+
+### /petfish stats
+
+查看当前项目的skill使用统计：
+
+```bash
+uv run .opencode/skills/skill-usage-tracker/scripts/track_usage.py --action report --target .
+```

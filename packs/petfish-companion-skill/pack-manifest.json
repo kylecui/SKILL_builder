@@ -1,7 +1,7 @@
 {
   "name": "petfish-companion-skill",
   "version": "0.2.0",
-  "description": "PEtFiSh常驻伙伴 — 感知需求、推荐skill、跨市场搜索、创建/审计/门禁skill、挖掘仓库skill。",
+  "description": "PEtFiSh常驻伙伴 — 感知/搜索/创建/审计/门禁/挖掘/优化/评测/追踪skill的全生命周期管理。",
   "compatibility": "opencode",
   "skills": [
     "petfish-companion",
@@ -10,7 +10,10 @@
     "skill-lint",
     "repo-skill-miner",
     "skill-security-auditor",
-    "quality-gate"
+    "quality-gate",
+    "skill-description-optimizer",
+    "skill-trigger-evaluator",
+    "skill-usage-tracker"
   ],
   "commands": [
     "petfish"
@@ -41,6 +44,15 @@
     ".opencode/skills/quality-gate/SKILL.md",
     ".opencode/skills/quality-gate/references/gate-standards.md",
     ".opencode/skills/quality-gate/scripts/run_gate.py",
+    ".opencode/skills/skill-description-optimizer/SKILL.md",
+    ".opencode/skills/skill-description-optimizer/references/optimization-guide.md",
+    ".opencode/skills/skill-description-optimizer/scripts/optimize_description.py",
+    ".opencode/skills/skill-trigger-evaluator/SKILL.md",
+    ".opencode/skills/skill-trigger-evaluator/references/evaluation-methodology.md",
+    ".opencode/skills/skill-trigger-evaluator/scripts/evaluate_triggers.py",
+    ".opencode/skills/skill-usage-tracker/SKILL.md",
+    ".opencode/skills/skill-usage-tracker/references/tracking-guide.md",
+    ".opencode/skills/skill-usage-tracker/scripts/track_usage.py",
     ".opencode/commands/petfish.md"
   ]
 }
