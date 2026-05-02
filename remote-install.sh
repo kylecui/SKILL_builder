@@ -146,8 +146,9 @@ declare -A ALIASES=(
     [companion]="petfish-companion-skill"
     [ppt]="opencode-ppt-skills"
     [init]="project-initializer-skill"
+    [trust]="trustskills"
 )
-ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "petfish-companion-skill" "opencode-ppt-skills" "project-initializer-skill")
+ALL_PACKS=("opencode-course-skills-pack" "opencode-skill-pack-testcases-usage-docs" "repo-deploy-ops-skill-pack" "petfish-style-skill" "petfish-companion-skill" "opencode-ppt-skills" "project-initializer-skill" "trustskills")
 
 # --- Defaults ---
 PACK=""
@@ -184,7 +185,7 @@ while [[ $# -gt 0 ]]; do
             echo "胖鱼 PEtFiSh — AI Worker's Companion — Self-adaptive Skill Installer (remote)"
             echo ""
             echo "Options:"
-            echo "  --pack <name|all>       Pack to install (course, testdocs, deploy, petfish, companion, ppt, init, or all)"
+            echo "  --pack <name|all>       Pack to install (course, testdocs, deploy, petfish, companion, ppt, init, trust, or all)"
             echo "  --target <path>         Target project directory (default: ., ignored with --global)"
             echo "  --platform <platform>   Target platform: opencode, claude, codex, cursor, copilot, windsurf, antigravity, universal"
             echo "                          Or group: all, primary, ide, cli"
@@ -219,6 +220,7 @@ if $LIST; then
     echo "  petfish-companion-skill                  (alias: companion)"
     echo "  opencode-ppt-skills                      (alias: ppt)"
     echo "  project-initializer-skill                (alias: init)"
+    echo "  trustskills                              (alias: trust)"
     echo ""
     exit 0
 fi
@@ -246,7 +248,7 @@ resolve_pack() {
                 return
             fi
         done
-        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, companion, ppt, init, all" >&2
+        echo "Unknown pack: '$name'. Available: course, testdocs, deploy, petfish, companion, ppt, init, trust, all" >&2
         exit 1
     fi
 }

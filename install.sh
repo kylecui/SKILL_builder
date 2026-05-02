@@ -148,6 +148,7 @@ declare -A ALIASES=(
     [companion]="petfish-companion-skill"
     [ppt]="opencode-ppt-skills"
     [init]="project-initializer-skill"
+    [trust]="trustskills"
 )
 
 # --- Defaults ---
@@ -180,7 +181,7 @@ while [[ $# -gt 0 ]]; do
         -h|--help)
             echo "Usage: $0 --pack <name|all> [--target <path>] [--platform <opencode|claude|codex|cursor|copilot|windsurf|antigravity|universal|all|primary|ide|cli>] [--detect] [--global] [--force] [--list]"
             echo "胖鱼 PEtFiSh AI Worker's Companion — Self-adaptive Skill Installer"
-            echo "Aliases: course, testdocs, deploy, petfish, companion, ppt, init"
+            echo "Aliases: course, testdocs, deploy, petfish, companion, ppt, init, trust"
             exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac

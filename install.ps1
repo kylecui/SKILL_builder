@@ -10,7 +10,7 @@
 
 .PARAMETER Pack
     Pack name or alias. Use 'all' to install every pack.
-    Aliases: course, testdocs, deploy, init, petfish, companion, ppt
+    Aliases: course, testdocs, deploy, init, petfish, companion, ppt, trust
     Full names also accepted.
 
 .PARAMETER Target
@@ -89,6 +89,7 @@ $Aliases = @{
     "petfish"  = "petfish-style-skill"
     "companion" = "petfish-companion-skill"
     "ppt"      = "opencode-ppt-skills"
+    "trust"    = "trustskills"
 }
 
 # --- Platform path configuration ---
