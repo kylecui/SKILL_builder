@@ -87,6 +87,8 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack init
 ```
 
+> 安装脚本自动获取最新稳定release版本，无需手动指定版本号。
+
 装完后输入 `/initproject`，胖鱼会问你项目类型，然后自动装上匹配的 skill pack。
 
 **日常使用 `/petfish` 命令：**
