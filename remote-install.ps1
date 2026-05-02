@@ -190,25 +190,25 @@ function Get-DetectedPlatform([string]$targetPath) {
 function Merge-AgentsMd([string]$srcFile, [string]$dstFile, [string]$packName, [switch]$ForceOverwrite) {
     $beginMarker = "<!-- BEGIN pack: $packName -->"
     $endMarker = "<!-- END pack: $packName -->"
-    $srcContent = (Get-Content $srcFile -Raw).TrimEnd()
+    $srcContent = (Get-Content $srcFile -Raw -Encoding UTF8).TrimEnd()
     $wrappedContent = "$beginMarker`n$srcContent`n$endMarker"
 
     if (-not (Test-Path $dstFile)) {
-        Set-Content -Path $dstFile -Value $wrappedContent -NoNewline
+        Set-Content -Path $dstFile -Value $wrappedContent -NoNewline -Encoding UTF8
         return "created"
     }
 
-    $existing = Get-Content $dstFile -Raw
+    $existing = Get-Content $dstFile -Raw -Encoding UTF8
     if ($existing -match [regex]::Escape($beginMarker)) {
         if (-not $ForceOverwrite) { return "exists" }
         $pattern = "(?s)" + [regex]::Escape($beginMarker) + ".*?" + [regex]::Escape($endMarker)
         $replaced = [regex]::Replace($existing, $pattern, $wrappedContent)
-        Set-Content -Path $dstFile -Value $replaced -NoNewline
+        Set-Content -Path $dstFile -Value $replaced -NoNewline -Encoding UTF8
         return "updated"
     }
 
     $merged = $existing.TrimEnd() + "`n`n" + $wrappedContent + "`n"
-    Set-Content -Path $dstFile -Value $merged -NoNewline
+    Set-Content -Path $dstFile -Value $merged -NoNewline -Encoding UTF8
     return "merged"
 }
 
@@ -218,8 +218,8 @@ function Merge-OpencodeJson([string]$srcFile, [string]$dstFile, [switch]$ForceOv
         return "created"
     }
 
-    $src = Get-Content $srcFile -Raw | ConvertFrom-Json
-    $dst = Get-Content $dstFile -Raw | ConvertFrom-Json
+    $src = Get-Content $srcFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    $dst = Get-Content $dstFile -Raw -Encoding UTF8 | ConvertFrom-Json
 
     foreach ($p1 in $src.PSObject.Properties) {
         if (-not $dst.PSObject.Properties[$p1.Name]) {
@@ -249,7 +249,7 @@ function Merge-OpencodeJson([string]$srcFile, [string]$dstFile, [switch]$ForceOv
         }
     }
 
-    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile
+    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile -Encoding UTF8
     return "merged"
 }
 
@@ -258,7 +258,7 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
     $entry = @{ installed_at = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ") }
 
     if (Test-Path $manifestFile) {
-        $m = Get-Content $manifestFile -Raw | ConvertFrom-Json
+        $m = Get-Content $manifestFile -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($m.PSObject.Properties['version']) { $entry.version = $m.version }
         if ($m.PSObject.Properties['skills']) { $entry.skills = $m.skills }
         if ($m.PSObject.Properties['description']) { $entry.description = $m.description }
@@ -269,7 +269,7 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
     }
 
     if (Test-Path $regFile) {
-        $reg = Get-Content $regFile -Raw | ConvertFrom-Json
+        $reg = Get-Content $regFile -Raw -Encoding UTF8 | ConvertFrom-Json
     } else {
         $reg = [PSCustomObject]@{ packs = [PSCustomObject]@{} }
     }
@@ -281,7 +281,7 @@ function Update-InstalledPacks([string]$registryDir, [string]$packName, [string]
         $reg.packs | Add-Member -NotePropertyName $packName -NotePropertyValue $entryObj
     }
 
-    $reg | ConvertTo-Json -Depth 10 | Set-Content $regFile
+    $reg | ConvertTo-Json -Depth 10 | Set-Content $regFile -Encoding UTF8
 }
 
 function Update-TranslatedInstructions([string]$sourceFile, [string]$destinationFile, [string]$platformName) {
@@ -290,7 +290,7 @@ function Update-TranslatedInstructions([string]$sourceFile, [string]$destination
     if (-not $translation) { return $null }
     if (-not (Test-Path $sourceFile)) { return $null }
 
-    $sourceContent = (Get-Content $sourceFile -Raw).TrimEnd()
+    $sourceContent = (Get-Content $sourceFile -Raw -Encoding UTF8).TrimEnd()
     $translatedContent = $sourceContent
 
     switch ($translation.method) {
@@ -312,7 +312,7 @@ function Update-TranslatedInstructions([string]$sourceFile, [string]$destination
 
     $tempFile = [System.IO.Path]::GetTempFileName()
     try {
-        Set-Content -Path $tempFile -Value $translatedContent -NoNewline
+        Set-Content -Path $tempFile -Value $translatedContent -NoNewline -Encoding UTF8
         return Merge-AgentsMd $tempFile $destinationFile "translation-$platformName" -ForceOverwrite:$true
     }
     finally {
@@ -327,7 +327,7 @@ function Convert-OpencodeExampleToClaudeSettings([string]$srcFile, [string]$dstF
         return "exists"
     }
 
-    $src = Get-Content $srcFile -Raw | ConvertFrom-Json
+    $src = Get-Content $srcFile -Raw -Encoding UTF8 | ConvertFrom-Json
     $permissions = [ordered]@{}
 
     if ($src.PSObject.Properties["permission"] -and $src.permission.PSObject.Properties["skill"]) {
@@ -354,7 +354,7 @@ function Convert-OpencodeExampleToClaudeSettings([string]$srcFile, [string]$dstF
         New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
     }
 
-    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile
+    $dst | ConvertTo-Json -Depth 10 | Set-Content $dstFile -Encoding UTF8
     return "created"
 }
 
@@ -655,7 +655,7 @@ try {
     Invoke-WebRequest @platformsRequest -UseBasicParsing
     Invoke-WebRequest @zipRequest -UseBasicParsing
 
-    $PlatformRegistry = Get-Content $platformsPath -Raw | ConvertFrom-Json
+    $PlatformRegistry = Get-Content $platformsPath -Raw -Encoding UTF8 | ConvertFrom-Json
 
     Write-Host "Extracting..."
     Expand-Archive -Path $zipPath -DestinationPath $tmpDir -Force
