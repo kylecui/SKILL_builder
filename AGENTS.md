@@ -661,3 +661,4 @@ Thinking can be exploratory, but final writing must be structured. The agent sho
 - 用户拒绝后本次会话不再重复推荐
 <!-- END pack: petfish-companion-skill -->
 <!-- END pack: petfish-companion-skill -->
+<!-- END pack: petfish-companion-skill -->

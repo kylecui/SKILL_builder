@@ -39,6 +39,7 @@ KNOWN_PACKS = {
     "petfish": "petfish-style-skill",
     "ppt": "opencode-ppt-skills",
     "testdocs": "opencode-skill-pack-testcases-usage-docs",
+    "trustskills": "trustskills",
 }
 
 
