@@ -50,9 +50,11 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 
 ## 说明
 
+- 安装脚本会**自动获取最新稳定release版本**（当前v0.2.0），无需手动指定版本号
 - `--detect` 自动检测当前AI平台，将skill安装到正确路径
 - `--pack init` 安装初始化器，后续通过`/initproject`按需装其他pack
 - 如需指定平台：`--platform cursor` / `--platform claude` / `--platform copilot` 等
+- 如需指定版本：`--branch v0.2.0`（bash）或 `-Branch v0.2.0`（PowerShell）
 
 ---
 

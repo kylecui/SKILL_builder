@@ -44,6 +44,9 @@ PEtFiSh is your AI coding companion. It manages the full lifecycle of AI skills 
 
 一条命令开始使用 — 全局安装初始化器，然后在任意项目中输入`/initproject`。
 
+> The install script automatically resolves the **latest stable release** — no version pinning needed.
+> 安装脚本自动获取**最新稳定release版本**，无需手动指定版本号。
+
 ```powershell
 # Windows (PowerShell)
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack init

@@ -79,6 +79,8 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 
 Run this command and verify it succeeds.
 
+> **Note**: The install script automatically downloads from the **latest stable release** (currently v0.2.0). No need to specify a version — you always get the latest verified build.
+
 ### 3b: Install the companion (always recommended)
 
 **Bash:**

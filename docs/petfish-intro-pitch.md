@@ -110,6 +110,8 @@ curl -fsSL https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/kylecui/SKILL_builder/master/remote-install.ps1))) -Pack init
 ```
 
+> 安装脚本自动获取最新稳定release版本，无需手动指定版本号。
+
 装完输入`/initproject`。胖鱼问你项目类型，自动装上匹配的skill pack。
 
 ---
